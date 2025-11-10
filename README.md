@@ -162,6 +162,21 @@ npm run dev
 | `ALLOWED_ORIGIN` | CORS 許可ドメイン | `http://localhost:5173` |
 | `VITE_BACKEND_URL` | (Front) Vite の `/api` プロキシ先 | `http://localhost:8080` |
 
+---
+
+## Time Allocation API (Node/Express + TypeScript)
+
+`node-backend/` には、比率に基づいて合計分を整数配分し SQLite に保存する API を追加しました。Express + better-sqlite3 + Zod で構成されており、詳細は [docs/TimeAllocationAPI.md](./docs/TimeAllocationAPI.md) を参照してください。
+
+```bash
+cd node-backend
+npm install          # 依存関係取得
+   # 開発サーバー (http://localhost:4000)
+npm run build && npm start   # 本番ビルド/起動
+```
+
+`POST /api/allocations` に対して `total_minutes` とタスクの比率配列を送ると、最大剰余法で端数調整した結果が `allocation_requests` / `task_allocations` テーブルに保存されます。
+
 サインド Cookie は `SESSION_TTL`（既定 12h）を過ぎると自動で失効します。`SESSION_SECRET` をローテーションすると既存 Cookie も検証に失敗するため、強制ログアウトさせたい場合は鍵を変更してください。ログアウト時は `Max-Age=-1` のクッキーを返し、クライアント側でも即時無効化されます。
 ## ローカル開発
 
