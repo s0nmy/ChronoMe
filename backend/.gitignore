@@ -1,0 +1,19 @@
+# Go build/test artifacts
+.gocache/
+dev.db
+coverage.out
+
+# GOPATH-style directories produced when overriding GOPATH/GOCACHE
+go/
+pkg/
+pkg/mod/
+pkg/sumdb/
+
+# Platform-specific telemetry/cache
+Library/
+Library/Application Support/go/telemetry/
+**/telemetry/local/
+
+# Misc local files
+*.log
+tmp/
