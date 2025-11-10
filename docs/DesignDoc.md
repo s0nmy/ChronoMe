@@ -77,36 +77,15 @@ ChronoMe バックエンドはクリーンアーキテクチャを採用し、�
 
 ```text
 backend/
- ├── cmd/
- │   └── main.go                 // DI とアプリケーション起動
+ ├── cmd/server                 // DI とアプリケーション起動
  ├── internal/
- │   ├── entity/                 // エンティティ層（最内側）
- │   │   ├── user.go
- │   │   ├── entry.go
- │   │   └── project.go
- │   ├── usecase/                // ユースケース層
- │   │   ├── interfaces.go       // Repository Interface 定義
- │   │   ├── entry_usecase.go
- │   │   ├── auth_usecase.go
- │   │   └── report_usecase.go
- │   ├── repository/             // Infrastructure層（Repository実装）
- │   │   ├── interface.go        // Usecase 層向けポート定義
- │   │   └── gorm/               // GORM による実装
- │   │       ├── entry_repository.go
- │   │       ├── project_repository.go
- │   │       ├── user_repository.go
- │   │       └── models/         // GORM 専用構造体
- │   │           ├── entry.go
- │   │           ├── project.go
- │   │           └── user.go
- │   ├── handler/                // Interface Adapters層
- │   │   ├── auth_handler.go
- │   │   ├── entry_handler.go
- │   │   └── middleware/
- │   └── utils/                  // 共通ユーティリティ
- │       ├── time_provider.go    // テスト可能な時刻取得
- │       └── jwt.go
- ├── migrations/                // SQL スクリプト
+ │   ├── domain/                // エンティティ + Repository インターフェース
+ │   ├── usecase/               // ユースケース層 + dto/provider
+ │   └── adapter/
+ │       ├── http/handler,middleware
+ │       ├── db/gormrepo        // GORM 実装
+ │       └── infra/             // config, session, database, time など
+ ├── test/fakes/                // フェイク Repository / Clock
  └── go.mod / go.sum
 
 frontend/
@@ -215,7 +194,7 @@ erDiagram
 | トークン保存 | ブラウザの Cookie（HttpOnly, Secure / SameSite=Lax） |
 | 暗号化 | bcrypt によるパスワードハッシュ化 |
 | 通信 | HTTPS 前提（開発では http://localhost） |
-| セッション管理 | ログイン時にセッションIDを発行し、サーバー側（メモリ or DB）で保持 |
+| セッション管理 | ユーザーIDと失効時刻を HMAC-SHA256 で署名した Cookie に格納（サーバー側ストレージ不要） |
 | CSRF 対策 | SameSite=Lax 設定で最小限対応 |
 | CORS 対策 | 開発時のみ localhost:5173 を許可 |
 | パスワードポリシー | 最小8文字、英数字混在（基本的な要件のみ） |
@@ -301,12 +280,12 @@ graph LR
 
 ### テスト種別と実行環境
 - **Unit（Usecase/Entity）**：`go test ./internal/...` - インメモリスタブを利用
-- **Integration（Repository）**：`go test ./internal/repository/...` - SQLite（インメモリ or ファイル）を利用
+- **Integration（Repository）**：`go test ./internal/adapter/db/...` - SQLite（インメモリ or ファイル）を利用
 - **E2E（手動確認）**：ブラウザを用いた主要フローの手動チェック（自動化は将来検討）
 
 ### 時刻依存テストの対応
 実装コストを抑えつつテスタビリティを確保するため、以下を採用：
-- Usecase 層には `TimeProvider` インターフェース（`Now() time.Time` のみ）を注入する
+- Usecase 層には provider パッケージの `Clock` インターフェース（`Now() time.Time` のみ）を注入する
 - 本番ではシステム時刻実装、テストでは固定時刻を返すスタブを用意する
 - DI 経由で差し替え、時刻依存ロジックを安定して検証できるようにする
 
@@ -314,9 +293,9 @@ graph LR
 
 ### Mock 生成
 ```bash
-# mockery を使用してテスト用 Mock を自動生成
-mockery --dir=internal/usecase --name=EntryRepository --output=mocks
-mockery --dir=internal/usecase --name=UserRepository --output=mocks
+# mockery を使用してテスト用 Mock/Fake を自動生成
+mockery --dir=internal/domain/repository --name=EntryRepository --output=test/mocks
+mockery --dir=internal/domain/repository --name=UserRepository --output=test/mocks
 ```
 
 ### 最小ディレクトリ
@@ -324,12 +303,10 @@ mockery --dir=internal/usecase --name=UserRepository --output=mocks
 backend/
 ├── cmd/
 ├── internal/
-│   ├── handler/
+│   ├── domain/
 │   ├── usecase/
-│   ├── repository/
-│   └── entity/
-├── mocks/              # （任意）テスト用モック
-├── migrations/
+│   └── adapter/{http,db,infra}
+├── test/fakes/
 └── dev.db              # 開発用 SQLite（自動生成）。`.env` で DSN を切り替え可能
 
 frontend/
@@ -343,7 +320,7 @@ frontend/
 go test ./internal/... -v
 
 # （任意）PostgreSQL を使った軽量な統合テスト
-TEST_DATABASE_URL=postgres://chronome_test:chronome_test@localhost:5433/chronome_test?sslmode=disable go test ./internal/repository/... -v
+TEST_DATABASE_URL=postgres://chronome_test:chronome_test@localhost:5433/chronome_test?sslmode=disable go test ./internal/adapter/db/... -v
 ```
 
 ### 代表シナリオ（E2E）
@@ -351,7 +328,7 @@ TEST_DATABASE_URL=postgres://chronome_test:chronome_test@localhost:5433/chronome
 2) **Entries**：start → stop → list（未終了があれば自動終了）  
 3) **Reports**：`GET /reports/daily` で日次集計取得（UTC保存／JST表示の簡易確認）
 
-> メモ：時刻依存を避けるため、Usecaseに `TimeProvider` Interface を注入し、テスト時は固定時刻を返すスタブを使用する。
+> メモ：時刻依存を避けるため、Usecase/provider の `Clock` インターフェースを注入し、テスト時は固定時刻を返すフェイクを使用する。
 
 ---
 

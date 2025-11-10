@@ -148,6 +148,21 @@ npm run dev
 ```
 
 バックエンドはローカルの SQLite ファイル（既定: `backend/dev.db`）を使用します。`.env` で DSN を差し替えることで PostgreSQL へ移行できます。
+
+### 4. 代表的な環境変数
+
+| 変数名 | 役割 | 既定値 |
+| --- | --- | --- |
+| `APP_ENV` | `production` の場合は安全設定が強制されます。 | `development` |
+| `SESSION_SECRET` | サインド Cookie の暗号鍵。マルチインスタンス運用では必ず安全な値に置き換えてください。 | `dev-secret-change-me` |
+| `SESSION_COOKIE_SECURE` | Cookie に `Secure` フラグを付与するかどうか | `APP_ENV` が `production` のとき `true` |
+| `SESSION_TTL` | サインド Cookie の有効期間 (Go duration) | `12h` |
+| `DEFAULT_PROJECT_COLOR` | 新規プロジェクトのデフォルト HEX カラー | `#3B82F6` |
+| `SERVER_ADDRESS` | HTTP サーバーのバインド先 | `:8080` |
+| `ALLOWED_ORIGIN` | CORS 許可ドメイン | `http://localhost:5173` |
+| `VITE_BACKEND_URL` | (Front) Vite の `/api` プロキシ先 | `http://localhost:8080` |
+
+サインド Cookie は `SESSION_TTL`（既定 12h）を過ぎると自動で失効します。`SESSION_SECRET` をローテーションすると既存 Cookie も検証に失敗するため、強制ログアウトさせたい場合は鍵を変更してください。ログアウト時は `Max-Age=-1` のクッキーを返し、クライアント側でも即時無効化されます。
 ## ローカル開発
 
 ### バックエンド開発
@@ -168,6 +183,8 @@ cd frontend
 npm run dev
 ```
 
+> 開発中のフロントエンドは Vite のプロキシ機能で `/api` へのリクエストを `VITE_BACKEND_URL`（既定 `http://localhost:8080`）へ転送します。バックエンドポートを変更した場合は `.env` でこの値を上書きしてください。
+
 ---
 
 ## テスト
@@ -181,7 +198,7 @@ cd backend
 go test ./internal/usecase/... -v
 
 # （任意）PostgreSQL を用いた統合テスト
-TEST_DATABASE_URL=postgres://chronome_test:chronome_test@localhost:5433/chronome_test?sslmode=disable go test ./internal/repository/... -v
+TEST_DATABASE_URL=postgres://chronome_test:chronome_test@localhost:5433/chronome_test?sslmode=disable go test ./internal/adapter/db/... -v
 ```
 
 ### フロントエンドテスト
@@ -232,15 +249,12 @@ npm run test
 ```
 ChronoMe/
 ├── backend/                 # Go バックエンド
-│   ├── cmd/                 # アプリケーションエントリーポイント
-│   ├── internal/            # 内部パッケージ
-│   │   ├── entity/          # エンティティ層
-│   │   ├── usecase/         # ユースケース層
-│   │   ├── repository/      # RepositoryのInterfaceと実装（interface.go, gorm/, models/）
-│   │   ├── handler/         # ハンドラ層
-│   │   └── utils/           # 共通ユーティリティ（例: TimeProvider）
-│   ├── migrations/          # DBマイグレーション
-│   └── mocks/               # テスト用Mock
+│   ├── cmd/server           # アプリケーションエントリーポイント
+│   ├── internal/
+│   │   ├── domain/         # エンティティ & Repository インターフェース
+│   │   ├── usecase/        # ユースケース + dto/provider
+│   │   └── adapter/        # HTTP ハンドラ、GORM 実装、config/session/time などのインフラ
+│   └── test/fakes          # ユースケース/ハンドラ向けフェイク
 ├── frontend/               # React フロントエンド
 │   ├── src/
 │   │   ├── components/     # UIコンポーネント

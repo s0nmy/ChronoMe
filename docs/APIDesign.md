@@ -25,7 +25,7 @@
 ---
 
 ## 2. 認証・認可
-- **方式**: サインド Cookie ベースのセッション。ログイン時にランダムなセッションIDを生成し、サーバー側（メモリまたは DB）に保持する。
+- **方式**: サインド Cookie ベースのセッション。ログイン時にユーザーIDと有効期限を含むトークンを生成し、HMAC-SHA256 で署名した Cookie を発行する（サーバー側に状態は保持しない）。
 - **セッション寿命**: 12 時間。延長処理は設けず、期限切れ後は再ログインで対応する。
 - **CSRF 対策**: `SameSite=Lax` の Cookie 設定を採用し、状態変更エンドポイントでは `POST/PUT/PATCH/DELETE` のみを使用する。
 - **認可**: リクエストが保持するセッションのユーザー ID と一致するデータのみ操作可能。Usecase 層で所有者チェックを行う。
@@ -249,17 +249,30 @@
 { "tags": [ { ...Tag } ] }
 ```
 
+#### GET /api/tags
+- **概要**: ユーザーのタグ一覧取得
+- **レスポンス `200 OK`**
+```json
+{ "tags": [{ "id": "...", "name": "Deep Work", "color": "#F97316" }] }
+```
+
 #### POST /api/tags
 - **概要**: タグ作成
-- **リクエスト**: `name`, `color`
-- **レスポンス `201 Created`**
+- **リクエスト**
+```json
+{ "name": "Deep Work", "color": "#F97316" }
+```
+- `color` 省略時はサーバー側デフォルト (`DEFAULT_PROJECT_COLOR`)
+- **レスポンス**: `201 Created`
 
 #### PATCH /api/tags/{tag_id}
-- **レスポンス `200 OK`**
+- **概要**: タグ名/色の更新
+- **バリデーション**: `color` は `#RRGGBB`
+- **レスポンス `200 OK`**: 更新後の Tag
 
 #### DELETE /api/tags/{tag_id}
 - **レスポンス `204 No Content`**
-- **備考**: `entry_tags` を cascade delete
+- **備考**: 今後 `entry_tags` を cascade delete 予定
 
 ---
 
@@ -395,12 +408,32 @@
 ```
 
 #### GET /api/reports/weekly
-- **クエリ**: `week_start=2024-01-01`
-- **レスポンス**: `summary` + 週次カレンダー配列（`days[0..6]`）
+- **クエリ**: `week_start=2024-01-01`（省略時は当週の月曜）
+- **レスポンス `200 OK`**
+```json
+{
+  "week_start": "2024-01-01",
+  "total_seconds": 14400,
+  "days": [
+    {"date": "2024-01-01", "total_seconds": 7200},
+    {"date": "2024-01-02", "total_seconds": 3000}
+  ]
+}
+```
 
 #### GET /api/reports/monthly
 - **クエリ**: `month=2024-01`
-- **レスポンス**: 月次サマリ + 週次/プロジェクト別 breakdown
+- **レスポンス `200 OK`**
+```json
+{
+  "month": "2024-01",
+  "total_seconds": 54000,
+  "days_in_month": 31,
+  "days": [{ "date": "2024-01-01", "total_seconds": 3600 }],
+  "weeks": [{ "week_start": "2023-12-30", "total_seconds": 7200 }],
+  "projects": [{ "project_id": "123e4567-e89b-12d3-a456-426614174000", "total_seconds": 2400 }]
+}
+```
 
 #### GET /api/reports/export
 - **概要**: CSV / JSON エクスポート
@@ -437,7 +470,7 @@
 ## 6. セキュリティ
 - **通信**: 本番を想定する場合は HTTPS を推奨。開発時は `http://localhost` を利用する。  
 - **入力バリデーション**: Handler 層で構造体バインド + 必須チェック、Usecase 層でドメインルールを検証する。  
-- **セッション**: `HttpOnly`・`Secure`（ローカルでは任意）・`SameSite=Lax` の Cookie を発行し、ID をサーバー側に保存する。  
+- **セッション**: `HttpOnly`・`Secure`（ローカルでは任意）・`SameSite=Lax` の Cookie にユーザーID + 失効時刻 + HMAC 署名を格納し、サーバー側のストレージに依存しない。秘密鍵をローテーションすると全セッションが無効になる。  
 - **CORS**: 開発中は `http://localhost:5173` のみ許可。将来のデプロイ時に適宜オリジンを追加する。  
 - **ログ**: ログイン失敗や重要イベントはアプリケーションログへ出力し、監査用途には将来対応する。
 

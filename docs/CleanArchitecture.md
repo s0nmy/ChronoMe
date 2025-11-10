@@ -21,7 +21,7 @@ flowchart LR
 
 1. **Interface設計の簡素化**: 過度に複雑なInterface分割を避け、必要最小限のメソッドに留める
 2. **Mock最小化**: 可能な限りシンプルなスタブやインメモリ実装で検証し、必要に応じて SQLite での軽量統合テスト（将来的には PostgreSQL でも同パッケージを利用）を行う
-3. **時刻依存対応の簡素化**: `TimeProvider` インターフェースは `Now()` のみに絞り、実装とテストで容易に差し替えられる構成にする
+3. **時刻依存対応の簡素化**: Usecase/provider の `Clock` インターフェースは `Now()` のみに絞り、実装とテストで容易に差し替えられる構成にする
 
 - 依存性は常に内向き（UI → Usecase → Entity）となるように保つ。
 - 外部リソース（DB や外部 API）は Infrastructure 層に隔離し、Usecase 層からはポート (interface) を介してアクセスする。
@@ -32,10 +32,10 @@ flowchart LR
 
 | 層 | ディレクトリ例 | 主な責務 | 禁止事項 |
 |----|----------------|----------|----------|
-| Entity | `internal/entity` | ドメインモデルとビジネスルールを表現。値オブジェクトやドメインサービスを含む。 | フレームワーク依存、入出力形式への依存 |
+| Entity | `internal/domain/entity` | ドメインモデルとビジネスルールを表現。値オブジェクトやドメインサービスを含む。 | フレームワーク依存、入出力形式への依存 |
 | Usecase | `internal/usecase` | アプリケーション固有のユースケースを実装し、トランザクション制御やバリデーション、リトライポリシーを管理。 | ORM や HTTP の直接利用、DB スキーマへの直接依存 |
-| Interface Adapter | `internal/handler`, `internal/presenter`, `internal/repository` | 入出力変換（DTO ↔ Entity）、REST ハンドラ、永続化のインターフェース実装。 | Usecase 層を飛び越えて Infrastructure に直接依存すること |
-| Infrastructure | `pkg/infra`, `internal/repository/gorm`, `cmd/server` | フレームワーク設定、DB クライアント構築、依存の組み立て。 | 内側の層を知らない型を勝手に生成しない |
+| Interface Adapter | `internal/adapter/http`, `internal/adapter/db` | 入出力変換（DTO ↔ Entity）、REST ハンドラ、GORM 実装など。 | Usecase 層を飛び越えて Infrastructure に直接依存すること |
+| Infrastructure | `internal/adapter/infra`, `cmd/server` | フレームワーク設定、DB クライアント構築、依存の組み立て。 | 内側の層を知らない型を勝手に生成しない |
 
 ---
 
@@ -55,7 +55,7 @@ flowchart LR
    - Repository 層は受け取った `context.Context` 内の `Tx` に基づき処理を行う。
 
 4. **時刻・設定の注入**  
-   - 現在時刻や設定値は `usecase` に `TimeProvider` / `Config` インターフェースを注入し、副作用をテストで差し替え可能にする。`TimeProvider` は単一メソッド (`Now() time.Time`) を持つ最小限の契約とする。
+   - 現在時刻や設定値は `usecase` に provider パッケージの `Clock` / `AppConfig` インターフェースを注入し、副作用をテストで差し替え可能にする。`Clock` は単一メソッド (`Now() time.Time`) を持つ最小限の契約とする。
 
 ---
 
@@ -92,7 +92,7 @@ Request/Response DTO は `internal/handler/dto` などに分離し、`json` タ�
 | Handler | API テスト | `httptest` で HTTP レスポンスとバリデーションを検証。 |
 
 - テストダブルには `testify/mock` などを利用するが、`entity` 層では標準ライブラリのみを使用する。  
-- `TimeProvider` などのインターフェースはテストで差し替え、固定時刻で検証できるようにする。
+- `Clock` などのインターフェースはテストで差し替え、固定時刻で検証できるようにする。
 
 ---
 
@@ -101,27 +101,16 @@ Request/Response DTO は `internal/handler/dto` などに分離し、`json` タ�
 ```
 backend/
 └── internal/
-    ├── entity/
-    │   └── user.go
+    ├── domain/
+    │   └── entity, repository インターフェース
     ├── usecase/
-    │   ├── user_usecase.go
-    │   └── entry_usecase.go
-    ├── repository/
-    │   ├── interface.go        // Port 定義
-    │   └── gorm/               // GORM 実装
-    │       ├── entry_repository.go
-    │       ├── project_repository.go
-    │       ├── user_repository.go
-    │       └── models/
-    │           ├── entry.go
-    │           ├── project.go
-    │           └── user.go
-    ├── handler/
-    │   ├── entry_handler.go
-    │   └── dto/
-    │       └── entry_request.go
-    └── presenter/
-        └── entry_presenter.go
+    │   ├── entry_usecase.go など
+    │   ├── dto/
+    │   └── provider/
+    └── adapter/
+        ├── http/handler, middleware
+        ├── db/gormrepo
+        └── infra/config,database,session,time
 ```
 
 - `cmd/server/main.go` で必要な依存を手動で初期化し、各コンストラクタへ渡す。  

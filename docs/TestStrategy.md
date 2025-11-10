@@ -22,7 +22,7 @@ ChronoMe のテストは「最小の労力で主要フローを守る」こと�
 ### ユニットテスト（Usecase / Entity）
 
 - 依存をインターフェース化し、テストではインメモリ実装やシンプルなモックを注入する。  
-- 現在時刻に依存する処理は `TimeProvider`（`Now() time.Time` のみ）を注入して固定値に差し替える。
+- 現在時刻に依存する処理は Usecase/provider の `Clock` インターフェース（`Now() time.Time`）を注入して固定値に差し替える。
 
 ```go
 type StubEntryRepository struct {
@@ -110,7 +110,7 @@ cd backend
 go test ./internal/... -v
 
 # （任意）PostgreSQL を用いた統合テスト
-TEST_DATABASE_URL=postgres://chronome_test:chronome_test@localhost:5433/chronome_test?sslmode=disable go test ./internal/repository/... -v
+TEST_DATABASE_URL=postgres://chronome_test:chronome_test@localhost:5433/chronome_test?sslmode=disable go test ./internal/adapter/db/... -v
 
 # フロントエンド
 cd frontend
