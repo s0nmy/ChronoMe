@@ -29,7 +29,7 @@ func Load() Config {
 		Address:                getEnv("SERVER_ADDRESS", ":8080"),
 		DBDriver:               getEnv("DB_DRIVER", "sqlite"),
 		DBDsn:                  getEnv("DB_DSN", "dev.db"),
-		AllowedOrigin:          getEnv("ALLOWED_ORIGIN", "http://localhost:5173"),
+		AllowedOrigin:          getEnv("ALLOWED_ORIGIN", "http://localhost:3000"),
 		SessionTTLValue:        12 * time.Hour,
 		SessionSecret:          getEnv("SESSION_SECRET", DefaultSessionSecret),
 		Environment:            env,

@@ -149,7 +149,18 @@ npm run dev
 
 バックエンドはローカルの SQLite ファイル（既定: `backend/dev.db`）を使用します。`.env` で DSN を差し替えることで PostgreSQL へ移行できます。
 
-### 4. 代表的な環境変数
+### 4. テストデータ投入
+
+開発時にすぐログインできるよう、`admin@example.com / password` のユーザーを投入するシードスクリプトを用意しています。
+
+```bash
+cd backend
+go run ./cmd/devdata
+```
+
+既にユーザーが存在する場合はスキップされます。
+
+### 5. 代表的な環境変数
 
 | 変数名 | 役割 | 既定値 |
 | --- | --- | --- |
@@ -159,7 +170,7 @@ npm run dev
 | `SESSION_TTL` | サインド Cookie の有効期間 (Go duration) | `12h` |
 | `DEFAULT_PROJECT_COLOR` | 新規プロジェクトのデフォルト HEX カラー | `#3B82F6` |
 | `SERVER_ADDRESS` | HTTP サーバーのバインド先 | `:8080` |
-| `ALLOWED_ORIGIN` | CORS 許可ドメイン | `http://localhost:5173` |
+| `ALLOWED_ORIGIN` | CORS 許可ドメイン | `http://localhost:3000` |
 | `VITE_BACKEND_URL` | (Front) Vite の `/api` プロキシ先 | `http://localhost:8080` |
 
 ---

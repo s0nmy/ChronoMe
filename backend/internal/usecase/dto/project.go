@@ -6,8 +6,9 @@ import (
 
 // ProjectCreateRequest describes the incoming body for create.
 type ProjectCreateRequest struct {
-	Name  string `json:"name"`
-	Color string `json:"color"`
+	Name        string `json:"name"`
+	Color       string `json:"color"`
+	Description string `json:"description"`
 }
 
 // Normalize validates and returns cleaned fields.
@@ -21,16 +22,18 @@ func (r ProjectCreateRequest) Normalize(defaultColor string) (ProjectInput, erro
 		color = defaultColor
 	}
 	return ProjectInput{
-		Name:  name,
-		Color: color,
+		Name:        name,
+		Color:       color,
+		Description: strings.TrimSpace(r.Description),
 	}, nil
 }
 
 // ProjectUpdateRequest handles partial updates.
 type ProjectUpdateRequest struct {
-	Name       *string `json:"name"`
-	Color      *string `json:"color"`
-	IsArchived *bool   `json:"is_archived"`
+	Name        *string `json:"name"`
+	Color       *string `json:"color"`
+	Description *string `json:"description"`
+	IsArchived  *bool   `json:"is_archived"`
 }
 
 // Normalize ensures trimmed values.
@@ -49,22 +52,29 @@ func (r ProjectUpdateRequest) Normalize() (ProjectUpdateInput, error) {
 		}
 		r.Color = &trimmed
 	}
+	if r.Description != nil {
+		trimmed := strings.TrimSpace(*r.Description)
+		r.Description = &trimmed
+	}
 	return ProjectUpdateInput{
-		Name:       r.Name,
-		Color:      r.Color,
-		IsArchived: r.IsArchived,
+		Name:        r.Name,
+		Color:       r.Color,
+		Description: r.Description,
+		IsArchived:  r.IsArchived,
 	}, nil
 }
 
 // ProjectInput is a normalized representation.
 type ProjectInput struct {
-	Name  string
-	Color string
+	Name        string
+	Color       string
+	Description string
 }
 
 // ProjectUpdateInput represents optional updates.
 type ProjectUpdateInput struct {
-	Name       *string
-	Color      *string
-	IsArchived *bool
+	Name        *string
+	Color       *string
+	Description *string
+	IsArchived  *bool
 }

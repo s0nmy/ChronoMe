@@ -9,13 +9,14 @@ import (
 
 // Project groups entries for reporting purposes.
 type Project struct {
-	ID         uuid.UUID `gorm:"type:uuid;primaryKey"`
-	UserID     uuid.UUID `gorm:"type:uuid;index;not null"`
-	Name       string    `gorm:"size:80;not null"`
-	Color      string    `gorm:"size:7;not null"`
-	IsArchived bool      `gorm:"not null;default:false"`
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	ID          uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	UserID      uuid.UUID `gorm:"type:uuid;index;not null" json:"user_id"`
+	Name        string    `gorm:"size:80;not null" json:"name"`
+	Description string    `gorm:"size:255" json:"description"`
+	Color       string    `gorm:"size:7;not null" json:"color"`
+	IsArchived  bool      `gorm:"not null;default:false" json:"is_archived"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 func (p *Project) Validate() error {
@@ -27,6 +28,9 @@ func (p *Project) Validate() error {
 	}
 	if len(p.Color) != 7 || p.Color[0] != '#' {
 		return errors.New("color must be #RRGGBB")
+	}
+	if len(p.Description) > 255 {
+		return errors.New("description is too long")
 	}
 	return nil
 }

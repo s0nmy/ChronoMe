@@ -10,13 +10,13 @@ import (
 
 // User represents an account that owns all other resources.
 type User struct {
-	ID           uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Email        string    `gorm:"uniqueIndex;size:254;not null"`
-	PasswordHash string    `gorm:"not null"`
-	DisplayName  string    `gorm:"size:50"`
-	TimeZone     string    `gorm:"size:40;default:UTC"`
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID           uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	Email        string    `gorm:"uniqueIndex;size:254;not null" json:"email"`
+	PasswordHash string    `gorm:"not null" json:"-"`
+	DisplayName  string    `gorm:"size:50" json:"display_name"`
+	TimeZone     string    `gorm:"size:40;default:UTC" json:"time_zone"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 // Normalize prepares the entity before persistence.

@@ -28,10 +28,11 @@ func (u *ProjectUsecase) Create(ctx context.Context, userID uuid.UUID, input dto
 		return nil, err
 	}
 	project := &entity.Project{
-		ID:     uuid.New(),
-		UserID: userID,
-		Name:   data.Name,
-		Color:  data.Color,
+		ID:          uuid.New(),
+		UserID:      userID,
+		Name:        data.Name,
+		Color:       data.Color,
+		Description: data.Description,
 	}
 	if err := project.Validate(); err != nil {
 		return nil, err
@@ -60,6 +61,9 @@ func (u *ProjectUsecase) Update(ctx context.Context, userID uuid.UUID, id uuid.U
 	}
 	if data.Color != nil {
 		project.Color = *data.Color
+	}
+	if data.Description != nil {
+		project.Description = *data.Description
 	}
 	if data.IsArchived != nil {
 		project.IsArchived = *data.IsArchived
