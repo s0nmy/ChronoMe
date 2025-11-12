@@ -26,7 +26,7 @@ export function ProjectSelect({
   placeholder = "プロジェクトを選択",
   className
 }: ProjectSelectProps) {
-  const currentValue = value || selectedProjectId;
+  const currentValue = value ?? selectedProjectId ?? undefined;
   const handleChange = onChange || onProjectSelect;
   const selectedProject = projects.find(p => p.id === currentValue);
 
