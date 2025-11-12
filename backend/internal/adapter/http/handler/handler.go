@@ -56,7 +56,7 @@ func (h *APIHandler) Router() *chi.Mux {
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{h.cfg.AllowedOrigin},
 		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", middleware.CSRFHeaderName},
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
@@ -72,24 +72,24 @@ func (h *APIHandler) Router() *chi.Mux {
 			auth.With(middleware.RequireAuth, middleware.RequireCSRF(h.cfg.AllowedOrigin)).Post("/logout", h.logout)
 		})
 
-		api.With(middleware.RequireAuth, middleware.RequireCSRF(h.cfg.AllowedOrigin)).Route("/projects", func(pr chi.Router) {
+		api.With(middleware.RequireAuth).Route("/projects", func(pr chi.Router) {
 			pr.Get("/", h.listProjects)
-			pr.Post("/", h.createProject)
-			pr.Patch("/{id}", h.updateProject)
-			pr.Delete("/{id}", h.deleteProject)
+			pr.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Post("/", h.createProject)
+			pr.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Patch("/{id}", h.updateProject)
+			pr.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Delete("/{id}", h.deleteProject)
 		})
-		api.With(middleware.RequireAuth, middleware.RequireCSRF(h.cfg.AllowedOrigin)).Route("/tags", func(tr chi.Router) {
+		api.With(middleware.RequireAuth).Route("/tags", func(tr chi.Router) {
 			tr.Get("/", h.listTags)
-			tr.Post("/", h.createTag)
-			tr.Patch("/{id}", h.updateTag)
-			tr.Delete("/{id}", h.deleteTag)
+			tr.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Post("/", h.createTag)
+			tr.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Patch("/{id}", h.updateTag)
+			tr.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Delete("/{id}", h.deleteTag)
 		})
 
-		api.With(middleware.RequireAuth, middleware.RequireCSRF(h.cfg.AllowedOrigin)).Route("/entries", func(er chi.Router) {
+		api.With(middleware.RequireAuth).Route("/entries", func(er chi.Router) {
 			er.Get("/", h.listEntries)
-			er.Post("/", h.createEntry)
-			er.Patch("/{id}", h.updateEntry)
-			er.Delete("/{id}", h.deleteEntry)
+			er.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Post("/", h.createEntry)
+			er.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Patch("/{id}", h.updateEntry)
+			er.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Delete("/{id}", h.deleteEntry)
 		})
 
 		api.With(middleware.RequireAuth).Route("/reports", func(rr chi.Router) {
