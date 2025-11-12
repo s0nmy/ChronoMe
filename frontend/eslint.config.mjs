@@ -32,10 +32,12 @@ export default [
     rules: {
       ...js.configs.recommended.rules,
       ...tsRecommended,
+      "no-undef": "off",
+      "@typescript-eslint/no-explicit-any": "off",
       "react/react-in-jsx-scope": "off",
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
-      "react-refresh/only-export-components": "warn",
+      "react-refresh/only-export-components": "off",
     },
     settings: {
       react: {

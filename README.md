@@ -322,6 +322,20 @@ ChronoMe/
 
 ---
 
+## CI/CD
+
+`.github/workflows/ci.yml` に GitHub Actions ベースの CI/CD を追加しています。`main` ブランチへの push / pull request / `workflow_dispatch` がトリガーになり、以下のジョブが順に実行されます。
+
+- **Backend · Go tests**: Go 1.25 をセットアップし `go test ./...` を実行。
+- **Frontend · Build**: Node.js 20 で `npm ci` → `npm run lint` → `npm run build` を実行し、生成物をアーティファクト化。
+- **Allocation API · TypeScript**: `node-backend` で `npm ci` → `npm run lint` → `npm run build` を実行し、`dist` をアーティファクト化。
+- **Deploy · Staging**: `main` ブランチへの push 時のみ、先の 3 ジョブの成功を待ってフロントエンド/Node API のアーティファクトと Go ソースを束ね、ステージング環境（`environment: staging`）向けデプロイ処理を行います。
+- **Deploy · Production**: `workflow_dispatch` で手動起動した場合にのみ走り、ステージング完了を `needs` で待ってから本番環境（`environment: production`）向けのデプロイコマンドを実行します。
+
+現状のデプロイ手順はプレースホルダーの `echo` コマンドのみですが、インフラ準備後は各ステップを rsync / SSH / container push など任意の手順に置き換えるだけで、テスト成功後に限ってデプロイされる安全なパイプラインになります。
+
+---
+
 ## ライセンス
 
 このプロジェクトは個人制作物です。学習目的での使用は自由ですが、商用利用の際は事前にご連絡ください。

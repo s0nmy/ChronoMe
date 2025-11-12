@@ -24,7 +24,7 @@ type ExportFormat = 'csv' | 'json';
 
 export function ExportDialog({ open, onOpenChange, entries }: ExportDialogProps) {
   const [period, setPeriod] = useState<ExportPeriod>('today');
-  const [format, setFormat] = useState<ExportFormat>('csv');
+  const [fileFormat, setFileFormat] = useState<ExportFormat>('csv');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
@@ -71,7 +71,7 @@ export function ExportDialog({ open, onOpenChange, entries }: ExportDialogProps)
 
     const filename = generateExportFilename(dateRange?.from, dateRange?.to);
 
-    if (format === 'csv') {
+    if (fileFormat === 'csv') {
       const exportData = convertEntriesToExportData(filteredEntries);
       downloadAsCSV(exportData, filename);
     } else {
@@ -163,7 +163,7 @@ export function ExportDialog({ open, onOpenChange, entries }: ExportDialogProps)
           {/* フォーマット選択 */}
           <div className="space-y-3">
             <Label>ファイル形式</Label>
-            <RadioGroup value={format} onValueChange={(value) => setFormat(value as ExportFormat)}>
+            <RadioGroup value={fileFormat} onValueChange={(value) => setFileFormat(value as ExportFormat)}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="csv" id="csv" />
                 <Label htmlFor="csv" className="flex items-center gap-2">

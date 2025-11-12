@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Switch } from './ui/switch';
 import { Separator } from './ui/separator';
 import { Badge } from './ui/badge';
-import { User, Mail, LogOut, Download, Trash2, Moon, Sun } from 'lucide-react';
+import { User, Mail, LogOut, Download, Trash2 } from 'lucide-react';
 import type { User as UserType, Entry } from '../types';
 import { formatDuration } from '../utils/time';
 
