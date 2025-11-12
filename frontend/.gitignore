@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# ビルド成果物
+build/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
