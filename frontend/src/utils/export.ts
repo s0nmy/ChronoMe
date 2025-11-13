@@ -8,7 +8,7 @@ import { formatDateShort, formatTimeShort, formatDuration } from './time';
 /**
  * エントリデータをCSVエクスポート用に変換
  */
-export function convertEntriesToExportData(entries: Entry[], projects: Project[]): ExportEntry[] {
+export function convertEntriesToExportData(entries: Entry[] = [], projects: Project[] = []): ExportEntry[] {
   const projectMap = new Map(projects.map(project => [project.id, project]));
   return entries
     .filter(entry => entry.endedAt) // 完了したエントリのみ
@@ -22,9 +22,9 @@ export function convertEntriesToExportData(entries: Entry[], projects: Project[]
       endTime: entry.endedAt ? formatTimeShort(entry.endedAt) : '',
       duration: formatDuration(entry.durationSec),
       notes: entry.notes || '',
-      tags: entry.tags.join(', '),
+      tags: Array.isArray(entry.tags) ? entry.tags.join(', ') : '',
       isBreak: entry.isBreak ? '休憩' : '作業',
-      ratio: `${Math.round(entry.ratio * 100)}%`
+      ratio: `${Math.round((entry.ratio ?? 1) * 100)}%`
     }))
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }

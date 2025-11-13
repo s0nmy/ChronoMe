@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Play, Pause, Square, Plus } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { Play, Pause, Square, Plus, Zap, Timer } from "lucide-react";
 import type { ActiveEntry, Project } from "../types";
 import { formatDuration } from "../utils/time";
 import { Button } from "./ui/button";
@@ -14,6 +14,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { ProjectSelect } from "./ProjectSelect";
 import { parseTagInput } from "../utils/tags";
+import { cn } from "./ui/utils";
 
 interface ActiveEntryTimersProps {
   activeEntries: ActiveEntry[];
@@ -50,6 +51,32 @@ export function ActiveEntryTimers({
   const [selectedProject, setSelectedProject] = useState("");
   const [notes, setNotes] = useState("");
   const [tagInput, setTagInput] = useState("");
+  const [quickStartPulse, setQuickStartPulse] = useState<string | null>(null);
+
+  const availableProjects = useMemo(
+    () => projects.filter((project) => !project.isArchived),
+    [projects],
+  );
+
+  const quickStartProjects = useMemo(
+    () => availableProjects.slice(0, 6),
+    [availableProjects],
+  );
+
+  const getProjectAccent = (color: string, alpha = 0.18) => {
+    if (!color) return "rgba(15, 23, 42, 0.08)";
+    let hex = color.replace("#", "");
+    if (hex.length === 3) {
+      hex = hex
+        .split("")
+        .map((char) => char + char)
+        .join("");
+    }
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
 
   const runningCount = activeEntries.filter(
     (entry) => !entry.isPaused,
@@ -74,18 +101,28 @@ export function ActiveEntryTimers({
     setShowQuickStart(false);
   };
 
+  const handleOneTapStart = (projectId: string) => {
+    onStartEntry(projectId);
+    setQuickStartPulse(projectId);
+    setTimeout(() => setQuickStartPulse(null), 500);
+  };
+
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-4">
-          <div>
-            <CardTitle className="text-base">
-              同時並行タイマー
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              プロジェクト横断で複数作業を同時に追跡します
-            </p>
-          </div>
+      <div className="grid gap-4 ">
+        <Card className="h-full">
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Timer className="w-4 h-4" />
+                </span>
+                同時並行タイマー
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                プロジェクト横断で複数作業を同時に追跡します
+              </p>
+            </div>
           <div className="text-right">
             <div className="text-xs text-muted-foreground">
               実行中 {runningCount} 件
@@ -97,8 +134,8 @@ export function ActiveEntryTimers({
         </CardHeader>
         <CardContent>
           {showQuickStart ? (
-            <div className="grid gap-4 md:grid-cols-[240px,1fr,1fr,auto]">
-              <div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="sm:col-span-2 lg:col-span-3">
                 <Label className="text-xs">プロジェクト</Label>
                 <ProjectSelect
                   projects={projects}
@@ -108,7 +145,7 @@ export function ActiveEntryTimers({
                   placeholder="プロジェクトを選択"
                 />
               </div>
-              <div>
+              <div className="sm:col-span-2 lg:col-span-2">
                 <Label className="text-xs">メモ（任意）</Label>
                 <Input
                   value={notes}
@@ -116,17 +153,15 @@ export function ActiveEntryTimers({
                   placeholder="作業内容を簡単に入力"
                 />
               </div>
-              <div>
-                <Label className="text-xs">
-                  タグ（カンマ区切り）
-                </Label>
+              <div className="sm:col-span-2 lg:col-span-1">
+                <Label className="text-xs">タグ（カンマ区切り）</Label>
                 <Input
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   placeholder="例: 設計, レビュー"
                 />
               </div>
-              <div className="flex items-end gap-2">
+              <div className="sm:col-span-2 lg:col-span-3 flex items-end gap-2">
                 <Button onClick={handleStart}>
                   <Play className="w-4 h-4 mr-1" />
                   計測開始
@@ -140,17 +175,97 @@ export function ActiveEntryTimers({
               </div>
             </div>
           ) : (
-            <Button
-              variant="outline"
-              onClick={() => setShowQuickStart(true)}
-              className="w-full"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              新しいタイマーを開始
-            </Button>
+            <>
+              {quickStartProjects.length === 0 ? (
+                <div className="text-center text-sm text-muted-foreground space-y-3">
+                  <p>スタートできるプロジェクトがありません。</p>
+                  <Button
+                    variant="outline"
+                    onClick={onCreateProject}
+                    size="sm"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    プロジェクトを追加
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickStart(true)}
+                    className="group relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 to-primary/5 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <span className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-inner">
+                          <Plus className="w-4 h-4" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium leading-tight">
+                            新規タイマー
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            詳細設定で開始
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs font-semibold text-foreground/70 flex-shrink-0">
+                        <span>Start</span>
+                        <Play className="w-3 h-3" />
+                      </div>
+                    </div>
+                  </button>
+                  {quickStartProjects.map((project) => (
+                    <button
+                      key={project.id}
+                      type="button"
+                      onClick={() => handleOneTapStart(project.id)}
+                      className={cn(
+                        "group relative overflow-hidden rounded-xl border bg-card/70 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                        quickStartPulse === project.id &&
+                          "ring-2 ring-offset-2 ring-primary/40",
+                      )}
+                      style={{
+                        borderColor: getProjectAccent(project.color, 0.8),
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <span
+                            className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white shadow-inner"
+                            style={{
+                              backgroundColor: project.color,
+                            }}
+                          >
+                            {project.name.slice(0, 2).toUpperCase()}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium leading-tight truncate">
+                              {project.name}
+                            </p>
+                            {project.description && (
+                              <p className="text-xs text-muted-foreground line-clamp-1">
+                                {project.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs font-semibold text-foreground/70 flex-shrink-0">
+                          <span>Start</span>
+                          <Play className="w-3 h-3" />
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </CardContent>
-      </Card>
+        </Card>
+
+        
+      </div>
 
       {activeEntries.length === 0 ? (
         <Card>

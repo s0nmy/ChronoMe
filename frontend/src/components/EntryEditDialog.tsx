@@ -19,7 +19,7 @@ interface EntryEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (entryId: string, updates: Partial<Entry>) => Promise<void>;
-  onDelete: (entryId: string) => Promise<void>;
+  onDelete?: (entryId: string) => Promise<void>;
   onCreateProject: () => void;
   entry: Entry | null;
   projects: Project[];
@@ -34,6 +34,7 @@ export function EntryEditDialog({
   entry,
   projects,
 }: EntryEditDialogProps) {
+  const canDelete = typeof onDelete === "function";
   const [formData, setFormData] = useState({
     projectId: "",
     date: "",
@@ -129,6 +130,10 @@ export function EntryEditDialog({
   };
 
   const handleDelete = async () => {
+    if (!onDelete) {
+      setError("このエントリは現在削除できません。");
+      return;
+    }
     if (!window.confirm("このエントリを削除しますか？")) {
       return;
     }
@@ -158,7 +163,6 @@ export function EntryEditDialog({
 
         <div className="space-y-4">
           <div>
-            <Label>プロジェクト</Label>
             <ProjectSelect
               projects={projects}
               value={formData.projectId}
@@ -289,7 +293,7 @@ export function EntryEditDialog({
             variant="destructive"
             onClick={handleDelete}
             className="mr-auto"
-            disabled={isDeleting || isSaving}
+            disabled={!canDelete || isDeleting || isSaving}
           >
             {isDeleting ? "削除中…" : "削除"}
           </Button>

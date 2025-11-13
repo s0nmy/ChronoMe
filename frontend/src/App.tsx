@@ -600,6 +600,8 @@ export default function App() {
             onCreateManualEntry={handleCreateManualEntry}
             onCreateProject={handleCreateProject}
             getCurrentElapsedTime={getCurrentElapsedTime}
+            onUpdateEntry={handleUpdateEntry}
+            onDeleteEntry={handleDeleteEntry}
           />
         );
       case "entries":
@@ -638,13 +640,15 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex flex-col">
       <SidebarNavigation
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
-      <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-        {renderScreen()}
+      <main className="flex-1 overflow-y-auto">
+        <div className="max-w-6xl mx-auto p-4 md:p-6">
+          {renderScreen()}
+        </div>
       </main>
     </div>
   );

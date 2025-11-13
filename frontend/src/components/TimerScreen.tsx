@@ -40,6 +40,8 @@ interface TimerScreenProps {
   onCreateManualEntry: (data: ManualEntryData) => Promise<void>;
   onCreateProject: (data: ProjectFormData) => Promise<void>;
   getCurrentElapsedTime: (entry: ActiveEntry) => number;
+  onUpdateEntry: (entryId: string, updates: Partial<Entry>) => Promise<void>;
+  onDeleteEntry: (entryId: string) => Promise<void>;
 }
 
 export function TimerScreen({
@@ -54,6 +56,8 @@ export function TimerScreen({
   onCreateManualEntry,
   onCreateProject,
   getCurrentElapsedTime,
+  onUpdateEntry,
+  onDeleteEntry,
 }: TimerScreenProps) {
   const [showManualDialog, setShowManualDialog] = useState(false);
   const [showProjectDialog, setShowProjectDialog] = useState(false);
@@ -71,15 +75,13 @@ export function TimerScreen({
   return (
     <div className="px-4 lg:px-8 pb-16">
       <div className="w-full max-w-6xl mx-auto space-y-6">
-        <div className="text-center">
-          <h1 className="text-xl font-semibold mb-2">
+          <h1 className="text-2xl font-semibold mb-2">
             時間記録
           </h1>
           <p className="text-sm text-muted-foreground">
             複数タイマー、ガントチャート、手動入力を組み合わせて ChronoMe
             エントリを管理します
           </p>
-        </div>
 
         <Tabs defaultValue="timers" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
@@ -116,6 +118,9 @@ export function TimerScreen({
               entries={entries}
               projects={projects}
               onAddManualEntry={openManualDialog}
+              onUpdateEntry={onUpdateEntry}
+              onDeleteEntry={onDeleteEntry}
+              onCreateProject={() => setShowProjectDialog(true)}
             />
           </TabsContent>
 

@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Label } from './ui/label';
-import { Switch } from './ui/switch';
-import { Separator } from './ui/separator';
 import { Badge } from './ui/badge';
 import { User, Mail, LogOut, Download, Trash2 } from 'lucide-react';
 import type { User as UserType, Entry } from '../types';
@@ -24,9 +21,6 @@ export function SettingsScreen({
   onExportData, 
   onDeleteAllData 
 }: SettingsScreenProps) {
-  const [darkMode, setDarkMode] = useState(false);
-  const [notifications, setNotifications] = useState(true);
-  const [autoBackup, setAutoBackup] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   
@@ -69,11 +63,11 @@ export function SettingsScreen({
 
   return (
     <div className="px-4 lg:px-8 pb-16">
-      <div className="w-full max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="mb-2">設定</h1>
-          <p className="text-muted-foreground text-sm">
-            アカウント設定とアプリケーション設定
+      <div className="w-full max-w-6xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-2xl font-semibold">設定</h1>
+          <p className="text-sm text-muted-foreground">
+            アカウント設定とデータ管理
           </p>
         </div>
 
@@ -101,9 +95,7 @@ export function SettingsScreen({
                   </p>
                 </div>
               </div>
-              
-              <Separator />
-              
+                            
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div>
                   <div className="text-2xl font-bold text-primary">
@@ -125,81 +117,32 @@ export function SettingsScreen({
             </CardContent>
           </Card>
 
-          {/* アプリケーション設定 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>アプリケーション設定</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">ダークモード</Label>
-                  <p className="text-sm text-muted-foreground">
-                    ダークテーマを使用する
-                  </p>
-                </div>
-                <Switch
-                  checked={darkMode}
-                  onCheckedChange={setDarkMode}
-                />
-              </div>
-              
-              <Separator />
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">通知</Label>
-                  <p className="text-sm text-muted-foreground">
-                    作業時間の通知を受け取る
-                  </p>
-                </div>
-                <Switch
-                  checked={notifications}
-                  onCheckedChange={setNotifications}
-                />
-              </div>
-              
-              <Separator />
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">自動バックアップ</Label>
-                  <p className="text-sm text-muted-foreground">
-                    データを自動的にバックアップする
-                  </p>
-                </div>
-                <Switch
-                  checked={autoBackup}
-                  onCheckedChange={setAutoBackup}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
           {/* データ管理 */}
           <Card>
             <CardHeader>
               <CardTitle>データ管理</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <Button 
-                variant="outline" 
-                onClick={onExportData}
-                className="w-full justify-start"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                データをエクスポート
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                onClick={handleDeleteAllData}
-                className="w-full justify-start text-destructive hover:text-destructive"
-                disabled={isDeleting}
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                {isDeleting ? '削除中…' : 'すべてのデータを削除'}
-              </Button>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button 
+                  variant="outline" 
+                  onClick={onExportData}
+                  className="flex-1 justify-start"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  データをエクスポート
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  onClick={handleDeleteAllData}
+                  className="flex-1 justify-start text-destructive hover:text-destructive"
+                  disabled={isDeleting}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {isDeleting ? '削除中…' : 'すべてのデータを削除'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -208,16 +151,18 @@ export function SettingsScreen({
             <CardHeader>
               <CardTitle>アプリ情報</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">バージョン</span>
-                <Badge variant="secondary">1.0.0</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">最終更新</span>
-                <span className="text-sm text-muted-foreground">
-                  2025年10月2日
-                </span>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1 flex justify-between items-center">
+                  <span className="text-sm">バージョン</span>
+                  <Badge variant="secondary">1.0.0</Badge>
+                </div>
+                <div className="flex-1 flex justify-between items-center">
+                  <span className="text-sm">最終更新</span>
+                  <span className="text-sm text-muted-foreground">
+                    2025年11月13日
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -4,6 +4,14 @@ import { Button } from './ui/button';
 import { ChevronLeft, ChevronRight, Calendar, Plus } from 'lucide-react';
 import type { Entry, Project } from '../types';
 import { formatDuration } from '../utils/time';
+import { EntryEditDialog } from './EntryEditDialog';
+
+const getLocalDateKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 interface DailyGanttChartProps {
   entries: Entry[];
@@ -11,6 +19,9 @@ interface DailyGanttChartProps {
   selectedDate?: Date;
   onDateChange?: (date: Date) => void;
   onAddManualEntry?: (date: string, startTime?: string) => void;
+  onUpdateEntry: (entryId: string, updates: Partial<Entry>) => Promise<void>;
+  onDeleteEntry: (entryId: string) => Promise<void>;
+  onCreateProject?: () => void;
 }
 
 interface GanttBlock {
@@ -21,6 +32,7 @@ interface GanttBlock {
   durationMinutes: number;
   left: number; // パーセンテージ
   width: number; // パーセンテージ
+  laneIndex: number;
 }
 
 export function DailyGanttChart({ 
@@ -28,9 +40,13 @@ export function DailyGanttChart({
   projects, 
   selectedDate = new Date(),
   onDateChange,
-  onAddManualEntry
+  onAddManualEntry,
+  onUpdateEntry,
+  onDeleteEntry,
+  onCreateProject
 }: DailyGanttChartProps) {
   const [currentDate, setCurrentDate] = useState(selectedDate);
+  const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
 
   const handleDateChange = (newDate: Date) => {
     setCurrentDate(newDate);
@@ -53,53 +69,78 @@ export function DailyGanttChart({
     handleDateChange(new Date());
   };
 
-  // 選択された日のエントリを取得
+  // 選択された日のエントリを取得（ローカル日付で比較）
   const getDaySessions = () => {
-    const dateStr = currentDate.toISOString().split('T')[0];
-    return entries.filter(entry => {
-      const entryDate = entry.startedAt.toISOString().split('T')[0];
-      return entryDate === dateStr;
-    });
+    const dateKey = getLocalDateKey(currentDate);
+    return entries.filter(entry => getLocalDateKey(entry.startedAt) === dateKey);
   };
 
   // ガントチャート用のブロック生成
-  const generateGanttBlocks = (): GanttBlock[] => {
-    const daySessions = getDaySessions();
-    
-    return daySessions.map(entry => {
-      const project = projects.find(p => p.id === entry.projectId);
-      if (!project) return null;
+  const generateGanttBlocks = (): { blocks: GanttBlock[]; laneCount: number } => {
+    const daySessions = getDaySessions().sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime());
+    const laneEndTimes: number[] = [];
 
-      const startHour = entry.startedAt.getHours();
-      const startMinute = entry.startedAt.getMinutes();
-      const durationMinutes = Math.floor(entry.durationSec / 60);
-      
-      // 0時から24時を100%として計算
-      const left = ((startHour * 60 + startMinute) / (24 * 60)) * 100;
-      const width = (durationMinutes / (24 * 60)) * 100;
+    const blocks = daySessions
+      .map(entry => {
+        const project = projects.find(p => p.id === entry.projectId);
+        if (!project) return null;
 
-      return {
-        entry,
-        project,
-        startHour,
-        startMinute,
-        durationMinutes,
-        left,
-        width
-      };
-    }).filter(Boolean) as GanttBlock[];
+        const startMs = entry.startedAt.getTime();
+        const explicitEndMs = entry.endedAt?.getTime();
+        const fallbackDurationMs =
+          typeof entry.durationSec === 'number' && entry.durationSec > 0
+            ? entry.durationSec * 1000
+            : 5 * 60 * 1000; // default 5 minutes
+        const endMs = explicitEndMs ?? startMs + fallbackDurationMs;
+
+        const durationMinutes = Math.max(1, Math.round((endMs - startMs) / (60 * 1000)));
+
+        let laneIndex = laneEndTimes.findIndex(end => end <= startMs);
+        if (laneIndex === -1) {
+          laneIndex = laneEndTimes.length;
+          laneEndTimes.push(endMs);
+        } else {
+          laneEndTimes[laneIndex] = endMs;
+        }
+
+        // 0時から24時を100%として計算
+        const minutesFromMidnight =
+          entry.startedAt.getHours() * 60 + entry.startedAt.getMinutes() + entry.startedAt.getSeconds() / 60;
+        const left = (minutesFromMidnight / (24 * 60)) * 100;
+        const width = (durationMinutes / (24 * 60)) * 100;
+
+        return {
+          entry,
+          project,
+          startHour: entry.startedAt.getHours(),
+          startMinute: entry.startedAt.getMinutes(),
+          durationMinutes,
+          left,
+          width,
+          laneIndex
+        };
+      })
+      .filter(Boolean) as GanttBlock[];
+
+    return {
+      blocks,
+      laneCount: Math.max(laneEndTimes.length, 1)
+    };
   };
 
   // 時間軸の目盛り生成
   const generateTimeScale = () => {
     const hours = [];
-    for (let i = 0; i < 24; i += 2) {
+    for (let i = 0; i <= 24; i += 2) {
       hours.push(i);
     }
     return hours;
   };
 
-  const ganttBlocks = generateGanttBlocks();
+  const { blocks: ganttBlocks, laneCount } = generateGanttBlocks();
+  const laneHeight = 28;
+  const laneGap = 4;
+  const timelineHeight = Math.max(64, laneCount * (laneHeight + laneGap) + laneGap);
   const timeScale = generateTimeScale();
   const daySessions = getDaySessions();
   const totalDuration = daySessions.reduce((sum, entry) => sum + entry.durationSec, 0);
@@ -115,12 +156,13 @@ export function DailyGanttChart({
     const minute = Math.floor(totalMinutes % 60);
     
     const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-    const dateString = currentDate.toISOString().split('T')[0];
+    const dateString = getLocalDateKey(currentDate);
     
     onAddManualEntry(dateString, timeString);
   };
 
   return (
+    <>
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -168,9 +210,12 @@ export function DailyGanttChart({
           
           {/* タイムライン */}
           <div 
-            className="relative h-16 bg-gray-100 rounded cursor-pointer hover:bg-gray-200 transition-colors"
+            className="relative bg-gray-100 rounded cursor-pointer hover:bg-gray-200 transition-colors"
             onClick={handleTimelineClick}
             title="クリックして手動エントリを追加"
+            style={{
+              height: `${timelineHeight}px`
+            }}
           >
             {/* 時間の境界線 */}
             {timeScale.map(hour => (
@@ -185,24 +230,32 @@ export function DailyGanttChart({
             {ganttBlocks.map((block, index) => (
               <div
                 key={`${block.entry.id}-${index}`}
-                className="absolute top-1 bottom-1 rounded px-2 py-1 text-white text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity overflow-hidden"
+                className="absolute rounded px-2 py-1 text-white text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity overflow-hidden flex flex-col justify-center"
                 style={{
                   left: `${block.left}%`,
                   width: `${Math.max(block.width, 0.5)}%`, // 最小幅を設定
                   backgroundColor: block.project.color,
+                  top: `${block.laneIndex * (laneHeight + laneGap) + laneGap}px`,
+                  height: `${laneHeight}px`
                 }}
                 title={`${block.project.name}\n${block.startHour}:${block.startMinute
                   .toString()
                   .padStart(2, "0")} - ${formatDuration(block.entry.durationSec)}\n${
                   block.entry.notes || ""
                 }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingEntry(block.entry);
+                }}
               >
                 <div className="truncate">
                   {block.project.name}
                 </div>
-                <div className="text-xs opacity-90">
-                  {formatDuration(block.entry.durationSec)}
-                </div>
+                {laneCount === 1 && (
+                  <div className="text-xs opacity-90">
+                    {formatDuration(block.entry.durationSec)}
+                  </div>
+                )}
               </div>
             ))}
             
@@ -278,7 +331,7 @@ export function DailyGanttChart({
                 variant="outline"
                 size="sm"
                 className="mt-2"
-                onClick={() => onAddManualEntry(currentDate.toISOString().split('T')[0])}
+                onClick={() => onAddManualEntry(getLocalDateKey(currentDate))}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 手動でエントリを追加
@@ -288,5 +341,22 @@ export function DailyGanttChart({
         )}
       </CardContent>
     </Card>
+
+    {editingEntry && (
+      <EntryEditDialog
+        open
+        entry={editingEntry}
+        projects={projects}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingEntry(null);
+          }
+        }}
+        onSave={onUpdateEntry}
+        onDelete={onDeleteEntry}
+        onCreateProject={onCreateProject || (() => undefined)}
+      />
+    )}
+    </>
   );
 }

@@ -177,9 +177,7 @@ export function WorkEntryList({
               ? (entryId, updates) => onUpdateEntry(entryId, updates)
               : async () => {}
           }
-          onDelete={
-            onDeleteEntry ? (entryId) => onDeleteEntry(entryId) : async () => {}
-          }
+          onDelete={onDeleteEntry}
           onCreateProject={
             onCreateProject || (() => void 0)
           }

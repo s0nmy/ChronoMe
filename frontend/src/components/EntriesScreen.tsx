@@ -28,8 +28,8 @@ export function EntriesScreen({
       <div className="w-full max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="mb-2">作業記録</h1>
-            <p className="text-muted-foreground text-sm">
+            <h1 className="text-2xl font-semibold">作業履歴</h1>
+            <p className="text-sm text-muted-foreground">
               作業履歴と統計情報
             </p>
           </div>

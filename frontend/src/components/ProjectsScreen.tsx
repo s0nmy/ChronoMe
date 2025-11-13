@@ -79,8 +79,8 @@ export function ProjectsScreen({
       <div className="w-full max-w-6xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold">
-              プロジェクト管理
+            <h1 className="text-2xl font-semibold">
+              プロジェクト
             </h1>
             <p className="text-sm text-muted-foreground">
               ChronoMe の project エンティティをメンテナンス
