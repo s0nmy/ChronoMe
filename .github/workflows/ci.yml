@@ -27,6 +27,9 @@ jobs:
       - name: Run unit tests
         run: go test ./...
 
+      - name: Run E2E tests
+        run: go test ./test/e2e -v
+
   frontend-build:
     name: Frontend · Build
     runs-on: ubuntu-latest
