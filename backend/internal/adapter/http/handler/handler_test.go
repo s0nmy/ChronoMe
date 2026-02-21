@@ -191,7 +191,7 @@ func TestAPIHandler_LoginSetsSecureCookie(t *testing.T) {
 	require.Equal(t, middleware.CSRFCookieName, csrfCookie.Name)
 }
 
-// helpers -------------------------------------------------------------------
+// ヘルパー ------------------------------------------------------------------
 
 func newAPIHandlerForTests(t *testing.T, projectRepo *fakes.FakeProjectRepository, entryRepo *fakes.FakeEntryRepository, tagRepo *fakes.FakeTagRepository) (*APIHandler, sess.Store, config.Config) {
 	t.Helper()

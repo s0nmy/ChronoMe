@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// SignedCookieStore encodes session data into the cookie using HMAC.
+// SignedCookieStore は HMAC でセッション情報をクッキーにエンコードする。
 type SignedCookieStore struct {
 	secret  []byte
 	now     func() time.Time
@@ -22,7 +22,7 @@ type SignedCookieStore struct {
 	revoked map[string]int64
 }
 
-// NewSignedCookieStore returns a store ready for multi-instance deployments.
+// NewSignedCookieStore はマルチインスタンス運用向けのストアを返す。
 func NewSignedCookieStore(secret string) (*SignedCookieStore, error) {
 	secret = strings.TrimSpace(secret)
 	if secret == "" {

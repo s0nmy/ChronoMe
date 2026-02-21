@@ -12,7 +12,7 @@ import (
 	"chronome/internal/usecase/provider"
 )
 
-// EntryUsecase controls business operations around time entries.
+// EntryUsecase は時間エントリ周りの業務処理を制御する。
 type EntryUsecase struct {
 	entries repository.EntryRepository
 	tags    repository.TagRepository

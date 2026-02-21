@@ -6,10 +6,10 @@ import (
 	"time"
 )
 
-// DefaultSessionSecret is used for local development only.
+// DefaultSessionSecret はローカル開発専用。
 const DefaultSessionSecret = "dev-secret-change-me"
 
-// Config aggregates runtime configuration loaded from environment variables.
+// Config は環境変数から読み込む実行時設定をまとめる。
 type Config struct {
 	Address                string
 	DBDriver               string
@@ -22,7 +22,7 @@ type Config struct {
 	DefaultProjectColorHex string
 }
 
-// Load returns the configuration with sane defaults for local development.
+// Load はローカル開発向けの妥当なデフォルトを含む設定を返す。
 func Load() Config {
 	env := getEnv("APP_ENV", "development")
 	cfg := Config{
@@ -62,7 +62,7 @@ func getEnvBool(key string, fallback bool) bool {
 	return fallback
 }
 
-// DefaultProjectColor returns the configured default color for new projects.
+// DefaultProjectColor は新規プロジェクト用のデフォルト色を返す。
 func (c Config) DefaultProjectColor() string {
 	if c.DefaultProjectColorHex == "" {
 		return "#3B82F6"
@@ -70,7 +70,7 @@ func (c Config) DefaultProjectColor() string {
 	return c.DefaultProjectColorHex
 }
 
-// SessionTTL returns the configured session duration.
+// SessionTTL は設定されたセッション期限を返す。
 func (c Config) SessionTTL() time.Duration {
 	return c.SessionTTLValue
 }

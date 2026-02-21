@@ -7,13 +7,13 @@ import (
 )
 
 const (
-	// CSRFHeaderName is the HTTP header clients must send with mutating requests.
+	// CSRFHeaderName は変更系リクエストでクライアントが送る HTTP ヘッダー名。
 	CSRFHeaderName = "X-CSRF-Token"
-	// CSRFCookieName stores the double-submit token accessible to frontend JS.
+	// CSRFCookieName はフロントエンドから参照できるダブルサブミットトークンを保持する。
 	CSRFCookieName = "chronome_csrf"
 )
 
-// RequireCSRF enforces double-submit CSRF tokens plus optional origin checks.
+// RequireCSRF はダブルサブミットの CSRF トークンと任意の Origin チェックを強制する。
 func RequireCSRF(allowedOrigin string) func(http.Handler) http.Handler {
 	allowed := normalizeOrigin(allowedOrigin)
 	return func(next http.Handler) http.Handler {

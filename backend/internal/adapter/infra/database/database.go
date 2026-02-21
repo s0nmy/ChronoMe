@@ -12,7 +12,7 @@ import (
 	"chronome/internal/domain/entity"
 )
 
-// Open establishes a gorm.DB based on config.
+// Open は設定に基づいて gorm.DB を作成する。
 func Open(cfg config.Config) (*gorm.DB, error) {
 	var (
 		db  *gorm.DB
@@ -33,7 +33,7 @@ func Open(cfg config.Config) (*gorm.DB, error) {
 	return db, nil
 }
 
-// Automigrate ensures database schema exists for the core entities.
+// Automigrate は主要エンティティのスキーマが存在することを保証する。
 func Automigrate(db *gorm.DB) error {
 	return db.AutoMigrate(&entity.User{}, &entity.Project{}, &entity.Entry{}, &entity.Tag{}, &entity.EntryTag{})
 }

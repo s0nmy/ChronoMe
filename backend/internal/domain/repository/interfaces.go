@@ -9,14 +9,14 @@ import (
 	"chronome/internal/domain/entity"
 )
 
-// UserRepository abstracts persistence for the user model.
+// UserRepository はユーザーモデルの永続化を抽象化する。
 type UserRepository interface {
 	Create(ctx context.Context, user *entity.User) error
 	GetByEmail(ctx context.Context, email string) (*entity.User, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*entity.User, error)
 }
 
-// ProjectRepository handles CRUD for projects.
+// ProjectRepository はプロジェクトの CRUD を扱う。
 type ProjectRepository interface {
 	Create(ctx context.Context, project *entity.Project) error
 	ListByUser(ctx context.Context, userID uuid.UUID) ([]entity.Project, error)
@@ -25,7 +25,7 @@ type ProjectRepository interface {
 	Delete(ctx context.Context, userID uuid.UUID, id uuid.UUID) error
 }
 
-// EntryFilter captures query constraints.
+// EntryFilter はクエリ条件をまとめる。
 type EntryFilter struct {
 	From      *time.Time
 	To        *time.Time
@@ -33,7 +33,7 @@ type EntryFilter struct {
 	TagID     *uuid.UUID
 }
 
-// EntryRepository provides CRUD for entries.
+// EntryRepository はエントリの CRUD を提供する。
 type EntryRepository interface {
 	Create(ctx context.Context, entry *entity.Entry) error
 	ListByUser(ctx context.Context, userID uuid.UUID, filter EntryFilter) ([]entity.Entry, error)
@@ -43,7 +43,7 @@ type EntryRepository interface {
 	ReplaceTags(ctx context.Context, entry *entity.Entry, tagIDs []uuid.UUID) error
 }
 
-// TagRepository is currently unused but reserved for future work.
+// TagRepository は現時点では未使用だが将来の拡張用に用意している。
 type TagRepository interface {
 	Create(ctx context.Context, tag *entity.Tag) error
 	ListByUser(ctx context.Context, userID uuid.UUID) ([]entity.Tag, error)

@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// EntryTag models the association table between entries and tags.
+// EntryTag はエントリとタグの関連テーブルを表す。
 type EntryTag struct {
 	EntryID   uuid.UUID `gorm:"type:uuid;primaryKey"`
 	TagID     uuid.UUID `gorm:"type:uuid;primaryKey"`

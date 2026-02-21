@@ -70,7 +70,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
         message = payload.error.message;
       }
     } catch {
-      // noop
+      // 何もしない
     }
     throw new APIError(message, response.status);
   }

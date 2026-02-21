@@ -6,7 +6,7 @@ import (
 	"chronome/internal/usecase/provider"
 )
 
-// FixedTimeProvider allows tests to control Now().
+// FixedTimeProvider はテストで Now() を制御できるようにする。
 type FixedTimeProvider struct {
 	NowFunc func() time.Time
 }

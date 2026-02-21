@@ -11,7 +11,7 @@ import (
 	"chronome/internal/domain/repository"
 )
 
-// ReportUsecase aggregates entry level data for dashboards.
+// ReportUsecase はダッシュボード用にエントリ集計を行う。
 const unassignedProjectKey = "unassigned"
 
 type ReportUsecase struct {
@@ -19,7 +19,7 @@ type ReportUsecase struct {
 	projects repository.ProjectRepository
 }
 
-// ReportRange carries the time window in the user's local time zone.
+// ReportRange はユーザーのローカル時間で期間を保持する。
 type ReportRange struct {
 	Start    time.Time
 	End      time.Time

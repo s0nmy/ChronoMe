@@ -8,14 +8,14 @@ import (
 	"github.com/google/uuid"
 )
 
-// Store describes the operations used by handlers/middleware.
+// Store はハンドラ/ミドルウェアで使う操作を定義する。
 type Store interface {
 	Create(userID uuid.UUID, ttl time.Duration) (string, error)
 	Get(sessionID string) (uuid.UUID, bool)
 	Delete(sessionID string)
 }
 
-// MemoryStore keeps sessions in-process. Suitable for local dev.
+// MemoryStore はプロセス内にセッションを保持し、ローカル開発向け。
 type MemoryStore struct {
 	mu       sync.RWMutex
 	sessions map[string]sessionValue

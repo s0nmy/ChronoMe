@@ -12,7 +12,7 @@ import (
 	"chronome/internal/domain/repository"
 )
 
-// AuthUsecase coordinates user onboarding and authentication.
+// AuthUsecase はユーザー登録と認証を調整する。
 type AuthUsecase struct {
 	users repository.UserRepository
 }
@@ -21,7 +21,7 @@ func NewAuthUsecase(users repository.UserRepository) *AuthUsecase {
 	return &AuthUsecase{users: users}
 }
 
-// SignupParams captures the data required to create a user.
+// SignupParams はユーザー作成に必要なデータをまとめる。
 type SignupParams struct {
 	Email       string
 	Password    string
@@ -60,7 +60,7 @@ func (u *AuthUsecase) Signup(ctx context.Context, params SignupParams) (*entity.
 	return user, nil
 }
 
-// Login validates a user's credentials and returns the entity on success.
+// Login はユーザーの認証情報を検証し、成功時にエンティティを返す。
 func (u *AuthUsecase) Login(ctx context.Context, email, password string) (*entity.User, error) {
 	user, err := u.users.GetByEmail(ctx, email)
 	if err != nil {

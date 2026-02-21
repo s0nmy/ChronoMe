@@ -9,7 +9,7 @@ import (
 	"chronome/internal/domain/entity"
 )
 
-// ProjectRepository implements repository.ProjectRepository via GORM.
+// ProjectRepository は GORM で repository.ProjectRepository を実装する。
 type ProjectRepository struct {
 	db *gorm.DB
 }

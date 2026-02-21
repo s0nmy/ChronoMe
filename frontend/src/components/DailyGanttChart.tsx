@@ -90,7 +90,7 @@ export function DailyGanttChart({
         const fallbackDurationMs =
           typeof entry.durationSec === 'number' && entry.durationSec > 0
             ? entry.durationSec * 1000
-            : 5 * 60 * 1000; // default 5 minutes
+            : 5 * 60 * 1000; // デフォルト 5 分
         const endMs = explicitEndMs ?? startMs + fallbackDurationMs;
 
         const durationMinutes = Math.max(1, Math.round((endMs - startMs) / (60 * 1000)));

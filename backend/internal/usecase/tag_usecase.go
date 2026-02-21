@@ -12,7 +12,7 @@ import (
 	"chronome/internal/usecase/provider"
 )
 
-// TagUsecase handles tag CRUD.
+// TagUsecase はタグの CRUD を扱う。
 type TagUsecase struct {
 	tags repository.TagRepository
 	cfg  provider.AppConfig

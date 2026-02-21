@@ -2,7 +2,7 @@ package dto
 
 import "fmt"
 
-// ValidationError indicates payload-level validation failure.
+// ValidationError はペイロード単位のバリデーション失敗を示す。
 type ValidationError struct {
 	Field   string
 	Message string
