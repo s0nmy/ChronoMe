@@ -1,13 +1,13 @@
 # Time Allocation API
 
-このドキュメントでは `node-backend/` に追加した Node.js (Express + TypeScript) API の仕様とアルゴリズムを説明します。
+このドキュメントでは Go バックエンドに統合された Time Allocation API の仕様とアルゴリズムを説明します。
 
 ## 概要
 
 - エンドポイント: `POST /api/allocations`
 - 入力: 合計作業時間 `total_minutes` と、各タスクの `ratio` / 任意の `min_minutes` / `max_minutes`
 - 出力: 各タスクの整数分配結果 (`allocated_minutes`)
-- ストレージ: SQLite (`data/allocation.db`) に `allocation_requests` / `task_allocations` を永続化
+- ストレージ: メイン DB に `allocation_requests` / `task_allocations` を永続化
 
 ## 入出力
 
@@ -90,12 +90,8 @@ task_allocations(
 ## 使い方
 
 ```
-cd node-backend
-npm install
-npm run dev   # 開発
-npm run build && npm start   # 本番ビルド
+cd backend
+go run ./cmd/server
 ```
 
-> **注**: 実行前に `npm install` で依存関係 (Express, Zod, better-sqlite3 等) を取得してください。
-
-テーブルはサーバー起動時に自動マイグレーションされます (`data/allocation.db` が作成される)。
+テーブルは Go サーバー起動時の自動マイグレーションで作成されます。
