@@ -4,16 +4,16 @@
 
 このリポジトリは学習プロジェクトです。相互に敬意を払い、建設的なコミュニケーションを心がけてください。
 
-## Contribute 手順・ブランチ命名規則
+## PR 作成フロー
 
-1. Issue またはタスクを確認し、作業内容を明確にします。
-2. `main` からブランチを作成します。
-   - `feature/short-description`
-   - `fix/short-description`
-   - `chore/short-description`
-   - `docs/short-description`
+1. Issue/タスクを確認して作業内容を明確にします。
+2. `main` から作業ブランチを作成します。
 3. 変更をコミットし、PR を作成します。
 4. 可能な限りテストと lint を実行します。
+
+### コミットメッセージ
+
+コミットメッセージの詳細ルールは [docs/CommitGuidelines.md](docs/CommitGuidelines.md) を参照してください。
 
 ## コーディングスタンダード
 
@@ -34,23 +34,44 @@ npm install
 npm run build
 ```
 
-```bash
-cd node-backend
-npm install
-npm run build
-```
-
-## テスト手順
+## テスト・静的解析
 
 ```bash
 cd backend
 go test ./...
 ```
 
-フロントエンドと Node API には現時点で自動テストがないため、変更時は lint の実行を推奨します。
+```bash
+cd frontend
+npm run lint
+```
+
+フロントエンドには現時点で自動テストがないため、変更時は lint の実行を推奨します。
+
+## 環境変数
+
+### バックエンド (Go)
+
+| 変数 | 説明 | デフォルト |
+| --- | --- | --- |
+| `APP_ENV` | 実行環境 | `development` |
+| `SERVER_ADDRESS` | バインドアドレス | `:8080` |
+| `DB_DRIVER` | DB ドライバ | `sqlite` |
+| `DB_DSN` | DB 接続先 | `dev.db` |
+| `ALLOWED_ORIGIN` | CORS 許可 Origin | `http://localhost:3000` |
+| `SESSION_SECRET` | セッション署名用シークレット | `dev-secret-change-me` |
+| `SESSION_TTL` | セッション有効期限 | `12h` |
+| `SESSION_COOKIE_SECURE` | Secure Cookie 有効化 | `false` (development) |
+| `DEFAULT_PROJECT_COLOR` | プロジェクト初期色 | `#3B82F6` |
+
+### フロントエンド (Vite)
+
+| 変数 | 説明 | デフォルト |
+| --- | --- | --- |
+| `VITE_API_BASE_URL` | API ベース URL | `http://localhost:8080` |
 
 ## コード設計
 
 - Go バックエンドは Handler / Usecase / Repository の層構造を維持します。
 - React フロントエンドは `features/` 単位で機能を分割し、UI は `components/` に集約します。
-- 仕様や設計の詳細は `docs/DesignDoc.md` を参照してください。
+- 仕様や設計の詳細は `.docs/DesignDoc.md` を参照してください。
