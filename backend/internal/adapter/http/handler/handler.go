@@ -94,8 +94,8 @@ func (h *APIHandler) Router() *chi.Mux {
 			er.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Delete("/{id}", h.deleteEntry)
 		})
 
-		api.Route("/allocations", func(ar chi.Router) {
-			ar.Post("/", h.createAllocation)
+		api.With(middleware.RequireAuth).Route("/allocations", func(ar chi.Router) {
+			ar.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Post("/", h.createAllocation)
 		})
 
 		api.With(middleware.RequireAuth).Route("/reports", func(rr chi.Router) {
