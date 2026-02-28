@@ -34,17 +34,19 @@ type APIHandler struct {
 	tags     *usecase.TagUsecase
 	entries  *usecase.EntryUsecase
 	reports  *usecase.ReportUsecase
+	allocs   *usecase.AllocationUsecase
 	sessions sess.Store
 	cfg      config.Config
 }
 
-func NewAPIHandler(cfg config.Config, sessions sess.Store, auth *usecase.AuthUsecase, projects *usecase.ProjectUsecase, tags *usecase.TagUsecase, entries *usecase.EntryUsecase, reports *usecase.ReportUsecase) *APIHandler {
+func NewAPIHandler(cfg config.Config, sessions sess.Store, auth *usecase.AuthUsecase, projects *usecase.ProjectUsecase, tags *usecase.TagUsecase, entries *usecase.EntryUsecase, reports *usecase.ReportUsecase, allocs *usecase.AllocationUsecase) *APIHandler {
 	return &APIHandler{
 		auth:     auth,
 		projects: projects,
 		tags:     tags,
 		entries:  entries,
 		reports:  reports,
+		allocs:   allocs,
 		sessions: sessions,
 		cfg:      cfg,
 	}
@@ -90,6 +92,10 @@ func (h *APIHandler) Router() *chi.Mux {
 			er.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Post("/", h.createEntry)
 			er.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Patch("/{id}", h.updateEntry)
 			er.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Delete("/{id}", h.deleteEntry)
+		})
+
+		api.With(middleware.RequireAuth).Route("/allocations", func(ar chi.Router) {
+			ar.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Post("/", h.createAllocation)
 		})
 
 		api.With(middleware.RequireAuth).Route("/reports", func(rr chi.Router) {
@@ -371,6 +377,35 @@ func (h *APIHandler) deleteEntry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *APIHandler) createAllocation(w http.ResponseWriter, r *http.Request) {
+	var payload dto.AllocationRequest
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid payload")
+		return
+	}
+	result, err := h.allocs.Allocate(r.Context(), payload)
+	if err != nil {
+		var valErr dto.ValidationError
+		var constraintErr usecase.AllocationConstraintError
+		switch {
+		case errors.As(err, &valErr):
+			respondError(w, http.StatusUnprocessableEntity, valErr.Error())
+			return
+		case errors.As(err, &constraintErr):
+			respondError(w, http.StatusUnprocessableEntity, constraintErr.Error())
+			return
+		default:
+			respondError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+	respondJSON(w, http.StatusCreated, map[string]any{
+		"request_id":    result.RequestID,
+		"total_minutes": result.TotalMinutes,
+		"allocations":   result.Allocations,
+	})
 }
 
 func (h *APIHandler) dailyReport(w http.ResponseWriter, r *http.Request) {

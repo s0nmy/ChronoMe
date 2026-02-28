@@ -17,11 +17,20 @@ import (
 
 func newTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared&_foreign_keys=1"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
 	require.NoError(t, err)
-	require.NoError(t, db.AutoMigrate(&entity.User{}, &entity.Project{}, &entity.Entry{}, &entity.Tag{}, &entity.EntryTag{}))
+	require.NoError(t, db.AutoMigrate(
+		&entity.User{},
+		&entity.Project{},
+		&entity.Entry{},
+		&entity.Tag{},
+		&entity.EntryTag{},
+		&entity.AllocationRequest{},
+		&entity.TaskAllocation{},
+	))
+	require.NoError(t, db.Exec("PRAGMA foreign_keys = ON").Error)
 	sqlDB, err := db.DB()
 	require.NoError(t, err)
 	t.Cleanup(func() {
@@ -189,4 +198,47 @@ func TestUserRepository_NormalizesOnCreate(t *testing.T) {
 	byID, err := repo.GetByID(ctx, user.ID)
 	require.NoError(t, err)
 	require.Equal(t, "user@example.com", byID.Email)
+}
+
+func TestAllocationRepository_Create(t *testing.T) {
+	db := newTestDB(t)
+	repo := NewAllocationRepository(db)
+	ctx := context.Background()
+
+	request := &entity.AllocationRequest{ID: uuid.New(), TotalMinutes: 120, CreatedAt: time.Now().UTC()}
+	allocations := []entity.TaskAllocation{
+		{RequestID: request.ID, TaskID: "task-a", Ratio: 0.6, AllocatedMinutes: 72, CreatedAt: time.Now().UTC(), UpdatedAt: time.Now().UTC()},
+		{RequestID: request.ID, TaskID: "task-b", Ratio: 0.4, AllocatedMinutes: 48, CreatedAt: time.Now().UTC(), UpdatedAt: time.Now().UTC()},
+	}
+
+	require.NoError(t, repo.Create(ctx, request, allocations))
+
+	var requestCount int64
+	require.NoError(t, db.Model(&entity.AllocationRequest{}).Where("id = ?", request.ID).Count(&requestCount).Error)
+	require.Equal(t, int64(1), requestCount)
+
+	var allocationCount int64
+	require.NoError(t, db.Model(&entity.TaskAllocation{}).Where("request_id = ?", request.ID).Count(&allocationCount).Error)
+	require.Equal(t, int64(2), allocationCount)
+}
+
+func TestAllocationRepository_Create_RollsBackOnFailure(t *testing.T) {
+	db := newTestDB(t)
+	repo := NewAllocationRepository(db)
+	ctx := context.Background()
+
+	request := &entity.AllocationRequest{ID: uuid.New(), TotalMinutes: 60, CreatedAt: time.Now().UTC()}
+	allocations := []entity.TaskAllocation{
+		{RequestID: uuid.New(), TaskID: "task-a", Ratio: 1, AllocatedMinutes: 60, CreatedAt: time.Now().UTC(), UpdatedAt: time.Now().UTC()},
+	}
+
+	require.Error(t, repo.Create(ctx, request, allocations))
+
+	var requestCount int64
+	require.NoError(t, db.Model(&entity.AllocationRequest{}).Where("id = ?", request.ID).Count(&requestCount).Error)
+	require.Equal(t, int64(0), requestCount)
+
+	var allocationCount int64
+	require.NoError(t, db.Model(&entity.TaskAllocation{}).Count(&allocationCount).Error)
+	require.Equal(t, int64(0), allocationCount)
 }

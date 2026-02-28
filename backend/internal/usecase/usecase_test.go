@@ -300,6 +300,58 @@ func TestReportUsecase_MonthlyBreakdown(t *testing.T) {
 	require.Equal(t, "Backend", report.Projects[0].Name)
 }
 
+func TestDistributeAllocations_MinSumExceedsTotal(t *testing.T) {
+	_, err := distributeAllocations(dto.AllocationRequestData{
+		TotalMinutes: 30,
+		Tasks: []dto.AllocationTaskData{
+			{TaskID: "a", Ratio: 1, MinMinutes: intPtr(20)},
+			{TaskID: "b", Ratio: 1, MinMinutes: intPtr(15)},
+		},
+	})
+	require.EqualError(t, err, "total_minutes is smaller than the sum of min_minutes")
+}
+
+func TestDistributeAllocations_AllMaxBoundedExceedsTotal(t *testing.T) {
+	_, err := distributeAllocations(dto.AllocationRequestData{
+		TotalMinutes: 50,
+		Tasks: []dto.AllocationTaskData{
+			{TaskID: "a", Ratio: 1, MaxMinutes: intPtr(10)},
+			{TaskID: "b", Ratio: 2, MaxMinutes: intPtr(20)},
+		},
+	})
+	require.EqualError(t, err, "total_minutes exceeds the sum of max_minutes")
+}
+
+func TestDistributeAllocations_RespectsMaxConstraints(t *testing.T) {
+	allocations, err := distributeAllocations(dto.AllocationRequestData{
+		TotalMinutes: 10,
+		Tasks: []dto.AllocationTaskData{
+			{TaskID: "a", Ratio: 9, MaxMinutes: intPtr(5)},
+			{TaskID: "b", Ratio: 1, MaxMinutes: intPtr(10)},
+		},
+	})
+	require.NoError(t, err)
+	require.Equal(t, 5, allocations[0].AllocatedMinutes)
+	require.Equal(t, 5, allocations[1].AllocatedMinutes)
+}
+
+func TestDistributeAllocations_StableRemainderOrdering(t *testing.T) {
+	allocations, err := distributeAllocations(dto.AllocationRequestData{
+		TotalMinutes: 10,
+		Tasks: []dto.AllocationTaskData{
+			{TaskID: "a", Ratio: 1},
+			{TaskID: "b", Ratio: 1},
+			{TaskID: "c", Ratio: 1},
+		},
+	})
+	require.NoError(t, err)
+	require.Equal(t, []int{4, 3, 3}, []int{
+		allocations[0].AllocatedMinutes,
+		allocations[1].AllocatedMinutes,
+		allocations[2].AllocatedMinutes,
+	})
+}
+
 type stubConfig struct{}
 
 func (stubConfig) DefaultProjectColor() string {
@@ -311,3 +363,7 @@ func (stubConfig) SessionTTL() time.Duration {
 }
 
 var _ provider.AppConfig = stubConfig{}
+
+func intPtr(value int) *int {
+	return &value
+}

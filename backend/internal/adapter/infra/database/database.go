@@ -35,5 +35,13 @@ func Open(cfg config.Config) (*gorm.DB, error) {
 
 // Automigrate は主要エンティティのスキーマが存在することを保証する。
 func Automigrate(db *gorm.DB) error {
-	return db.AutoMigrate(&entity.User{}, &entity.Project{}, &entity.Entry{}, &entity.Tag{}, &entity.EntryTag{})
+	return db.AutoMigrate(
+		&entity.User{},
+		&entity.Project{},
+		&entity.Entry{},
+		&entity.Tag{},
+		&entity.EntryTag{},
+		&entity.AllocationRequest{},
+		&entity.TaskAllocation{},
+	)
 }

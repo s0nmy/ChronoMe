@@ -51,3 +51,8 @@ type TagRepository interface {
 	Update(ctx context.Context, tag *entity.Tag) error
 	Delete(ctx context.Context, userID uuid.UUID, id uuid.UUID) error
 }
+
+// AllocationRepository は分配リクエストの永続化を担う。
+type AllocationRepository interface {
+	Create(ctx context.Context, request *entity.AllocationRequest, allocations []entity.TaskAllocation) error
+}

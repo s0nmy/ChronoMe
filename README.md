@@ -3,7 +3,13 @@
 ChronoMe は個人の作業時間を記録・集計するタイムカード Web アプリケーションです。
 Go 製バックエンドと React + TypeScript フロントエンドで構成し、クリーンアーキテクチャを採用しています。
 
-## Usage
+## 概要
+
+- フロントエンド: React + TypeScript (Vite)
+- バックエンド: Go
+- Allocation API: Go バックエンド内の `/api/allocations`
+
+## 使い方
 
 ローカル開発では以下のコマンドで各サービスを起動します。
 
@@ -18,26 +24,18 @@ npm install
 npm run dev
 ```
 
-```bash
-cd node-backend
-npm install
-npm run dev
-```
+## ドキュメント
 
-### ローカルアクセス例
-
-- フロントエンド: http://localhost:3000
-- Go API: http://localhost:8080
-- Allocation API: http://localhost:4000
-
-詳細な仕様・設計ドキュメントは `.docs/DesignDoc.md` と `docs/` 配下の各ドキュメントを参照してください。
+- 設計ドキュメント: `.docs/DesignDoc.md`
+- API/仕様: `docs/`
+- コミットルール: `docs/CommitGuidelines.md`
 
 ## Contributing
 
-Refer to the documentation in [CONTRIBUING.md](CONTRIBUTING.md).
+詳細は [CONTRIBUTING.md](CONTRIBUTING.md) と `.docs/DesignDoc.md` を参照してください。
 
 - PR / MR 手順: ブランチ作成 → テスト/静的解析 → PR/MR 作成
-- ディレクトリ構成: `backend/`, `frontend/`, `node-backend/`, `docs/`, `.docs/`
-- コーディングスタンダード: Go は `gofmt`、フロント/Node は ESLint と Prettier
+- ディレクトリ構成: `backend/`, `frontend/`, `docs/`, `.docs/`
+- コーディングスタンダード: Go は `gofmt`、フロントは ESLint と Prettier
 - テスト: `cd backend && go test ./...`
-- lint / 静的解析: `cd frontend && npm run lint`, `cd node-backend && npm run lint`
+- lint / 静的解析: `cd frontend && npm run lint`

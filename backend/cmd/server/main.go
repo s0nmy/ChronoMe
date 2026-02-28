@@ -43,6 +43,7 @@ func main() {
 	projectRepo := gormrepo.NewProjectRepository(db)
 	entryRepo := gormrepo.NewEntryRepository(db)
 	tagRepo := gormrepo.NewTagRepository(db)
+	allocationRepo := gormrepo.NewAllocationRepository(db)
 
 	// ユースケース
 	authUC := usecase.NewAuthUsecase(userRepo)
@@ -50,8 +51,9 @@ func main() {
 	tagUC := usecase.NewTagUsecase(tagRepo, cfg)
 	entryUC := usecase.NewEntryUsecase(entryRepo, tagRepo, infTime.SystemClock{})
 	reportUC := usecase.NewReportUsecase(entryRepo, projectRepo)
+	allocationUC := usecase.NewAllocationUsecase(allocationRepo, infTime.SystemClock{})
 
-	apiHandler := handler.NewAPIHandler(cfg, sessionStore, authUC, projectUC, tagUC, entryUC, reportUC)
+	apiHandler := handler.NewAPIHandler(cfg, sessionStore, authUC, projectUC, tagUC, entryUC, reportUC, allocationUC)
 
 	srv := &http.Server{
 		Addr:    cfg.Address,
