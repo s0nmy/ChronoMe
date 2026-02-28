@@ -5,13 +5,13 @@ import (
 	"errors"
 	"math"
 	"sort"
-	"time"
 
 	"github.com/google/uuid"
 
 	"chronome/internal/domain/entity"
 	"chronome/internal/domain/repository"
 	"chronome/internal/usecase/dto"
+	"chronome/internal/usecase/provider"
 )
 
 const allocationEpsilon = 1e-9
@@ -27,11 +27,12 @@ func (e AllocationConstraintError) Error() string {
 
 // AllocationUsecase は分配ロジックと永続化を担当する。
 type AllocationUsecase struct {
-	repo repository.AllocationRepository
+	repo  repository.AllocationRepository
+	clock provider.Clock
 }
 
-func NewAllocationUsecase(repo repository.AllocationRepository) *AllocationUsecase {
-	return &AllocationUsecase{repo: repo}
+func NewAllocationUsecase(repo repository.AllocationRepository, clock provider.Clock) *AllocationUsecase {
+	return &AllocationUsecase{repo: repo, clock: clock}
 }
 
 // AllocationResult は API に返す結果。
@@ -69,7 +70,7 @@ func (u *AllocationUsecase) Allocate(ctx context.Context, input dto.AllocationRe
 	}
 
 	requestID := uuid.New()
-	now := time.Now().UTC()
+	now := u.clock.Now()
 	request := &entity.AllocationRequest{
 		ID:           requestID,
 		TotalMinutes: data.TotalMinutes,

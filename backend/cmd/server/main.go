@@ -51,7 +51,7 @@ func main() {
 	tagUC := usecase.NewTagUsecase(tagRepo, cfg)
 	entryUC := usecase.NewEntryUsecase(entryRepo, tagRepo, infTime.SystemClock{})
 	reportUC := usecase.NewReportUsecase(entryRepo, projectRepo)
-	allocationUC := usecase.NewAllocationUsecase(allocationRepo)
+	allocationUC := usecase.NewAllocationUsecase(allocationRepo, infTime.SystemClock{})
 
 	apiHandler := handler.NewAPIHandler(cfg, sessionStore, authUC, projectUC, tagUC, entryUC, reportUC, allocationUC)
 

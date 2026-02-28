@@ -157,7 +157,7 @@ func TestAPIHandler_LoginSetsSecureCookie(t *testing.T) {
 	}
 	tagUC := usecase.NewTagUsecase(&fakes.FakeTagRepository{}, cfg)
 	entryUC := usecase.NewEntryUsecase(entryRepo, &fakes.FakeTagRepository{}, fakes.FixedTimeProvider{})
-	allocationUC := usecase.NewAllocationUsecase(&fakes.FakeAllocationRepository{})
+	allocationUC := usecase.NewAllocationUsecase(&fakes.FakeAllocationRepository{}, fakes.FixedTimeProvider{})
 	handler := NewAPIHandler(cfg, store, auth, usecase.NewProjectUsecase(projectRepo, cfg), tagUC, entryUC, usecase.NewReportUsecase(entryRepo, projectRepo), allocationUC)
 
 	body := bytes.NewBufferString(`{"email":"user@example.com","password":"s3cret"}`)
@@ -324,7 +324,7 @@ func newAPIHandlerForTests(t *testing.T, projectRepo *fakes.FakeProjectRepositor
 	tags := usecase.NewTagUsecase(tagRepo, cfg)
 	entries := usecase.NewEntryUsecase(entryRepo, tagRepo, fakes.FixedTimeProvider{})
 	reports := usecase.NewReportUsecase(entryRepo, projectRepo)
-	allocationUC := usecase.NewAllocationUsecase(allocationRepo)
+	allocationUC := usecase.NewAllocationUsecase(allocationRepo, fakes.FixedTimeProvider{})
 	return NewAPIHandler(cfg, store, auth, projects, tags, entries, reports, allocationUC), store, cfg
 }
 

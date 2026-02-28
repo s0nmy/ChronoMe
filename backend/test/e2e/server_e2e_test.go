@@ -179,7 +179,7 @@ func newFixture(t *testing.T) *fixture {
 	entryUC := usecase.NewEntryUsecase(entryRepo, tagRepo, infTime.SystemClock{})
 	reportUC := usecase.NewReportUsecase(entryRepo, projectRepo)
 
-	allocationUC := usecase.NewAllocationUsecase(&fakes.FakeAllocationRepository{})
+	allocationUC := usecase.NewAllocationUsecase(&fakes.FakeAllocationRepository{}, fakes.FixedTimeProvider{})
 	apiHandler := handler.NewAPIHandler(cfg, sessionStore, authUC, projectUC, tagUC, entryUC, reportUC, allocationUC)
 	server := httptest.NewServer(apiHandler.Router())
 
