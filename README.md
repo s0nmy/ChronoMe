@@ -32,7 +32,7 @@ npm run dev
 
 ## Contributing
 
-詳細は [CONTRIBUING.md](CONTRIBUTING.md) と `.docs/DesignDoc.md` を参照してください。
+詳細は [CONTRIBUTING.md](CONTRIBUTING.md) と `.docs/DesignDoc.md` を参照してください。
 
 - PR / MR 手順: ブランチ作成 → テスト/静的解析 → PR/MR 作成
 - ディレクトリ構成: `backend/`, `frontend/`, `docs/`, `.docs/`
