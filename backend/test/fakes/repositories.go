@@ -177,3 +177,15 @@ func (f *FakeTagRepository) Delete(ctx context.Context, userID uuid.UUID, id uui
 	}
 	return nil
 }
+
+// FakeAllocationRepository は分配履歴保存のテスト用実装。
+type FakeAllocationRepository struct {
+	CreateFn func(context.Context, *entity.AllocationRequest, []entity.TaskAllocation) error
+}
+
+func (f *FakeAllocationRepository) Create(ctx context.Context, request *entity.AllocationRequest, allocations []entity.TaskAllocation) error {
+	if f.CreateFn != nil {
+		return f.CreateFn(ctx, request, allocations)
+	}
+	return nil
+}

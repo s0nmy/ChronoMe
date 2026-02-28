@@ -157,7 +157,8 @@ func TestAPIHandler_LoginSetsSecureCookie(t *testing.T) {
 	}
 	tagUC := usecase.NewTagUsecase(&fakes.FakeTagRepository{}, cfg)
 	entryUC := usecase.NewEntryUsecase(entryRepo, &fakes.FakeTagRepository{}, fakes.FixedTimeProvider{})
-	handler := NewAPIHandler(cfg, store, auth, usecase.NewProjectUsecase(projectRepo, cfg), tagUC, entryUC, usecase.NewReportUsecase(entryRepo, projectRepo))
+	allocationUC := usecase.NewAllocationUsecase(&fakes.FakeAllocationRepository{})
+	handler := NewAPIHandler(cfg, store, auth, usecase.NewProjectUsecase(projectRepo, cfg), tagUC, entryUC, usecase.NewReportUsecase(entryRepo, projectRepo), allocationUC)
 
 	body := bytes.NewBufferString(`{"email":"user@example.com","password":"s3cret"}`)
 	req := httptest.NewRequest(http.MethodPost, "/api/auth/login", body)
@@ -226,7 +227,8 @@ func newAPIHandlerForTests(t *testing.T, projectRepo *fakes.FakeProjectRepositor
 	tags := usecase.NewTagUsecase(tagRepo, cfg)
 	entries := usecase.NewEntryUsecase(entryRepo, tagRepo, fakes.FixedTimeProvider{})
 	reports := usecase.NewReportUsecase(entryRepo, projectRepo)
-	return NewAPIHandler(cfg, store, auth, projects, tags, entries, reports), store, cfg
+	allocationUC := usecase.NewAllocationUsecase(&fakes.FakeAllocationRepository{})
+	return NewAPIHandler(cfg, store, auth, projects, tags, entries, reports, allocationUC), store, cfg
 }
 
 func addSessionCookie(t *testing.T, store sess.Store, cfg config.Config, req *http.Request, userID uuid.UUID) {

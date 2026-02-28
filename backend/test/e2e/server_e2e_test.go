@@ -24,6 +24,7 @@ import (
 	infTime "chronome/internal/adapter/infra/time"
 	"chronome/internal/domain/entity"
 	"chronome/internal/usecase"
+	"chronome/test/fakes"
 )
 
 func TestChronoMeEndToEnd(t *testing.T) {
@@ -178,7 +179,8 @@ func newFixture(t *testing.T) *fixture {
 	entryUC := usecase.NewEntryUsecase(entryRepo, tagRepo, infTime.SystemClock{})
 	reportUC := usecase.NewReportUsecase(entryRepo, projectRepo)
 
-	apiHandler := handler.NewAPIHandler(cfg, sessionStore, authUC, projectUC, tagUC, entryUC, reportUC)
+	allocationUC := usecase.NewAllocationUsecase(&fakes.FakeAllocationRepository{})
+	apiHandler := handler.NewAPIHandler(cfg, sessionStore, authUC, projectUC, tagUC, entryUC, reportUC, allocationUC)
 	server := httptest.NewServer(apiHandler.Router())
 
 	jar, err := cookiejar.New(nil)
