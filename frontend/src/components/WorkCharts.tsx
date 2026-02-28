@@ -171,7 +171,7 @@ export function WorkCharts({ entries, projects }: { entries: Entry[]; projects: 
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      {/* Weekly Hours Chart */}
+      {/* 週間作業時間のチャート */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -200,7 +200,7 @@ export function WorkCharts({ entries, projects }: { entries: Entry[]; projects: 
         </CardContent>
       </Card>
 
-      {/* Project Distribution Chart */}
+      {/* プロジェクト別時間配分のチャート */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

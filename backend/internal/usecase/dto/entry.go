@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// EntryCreateRequest captures the JSON payload for creating an entry.
+// EntryCreateRequest はエントリ作成の JSON ペイロードを受け取る。
 type EntryCreateRequest struct {
 	Title     string   `json:"title"`
 	Notes     string   `json:"notes"`
@@ -19,7 +19,7 @@ type EntryCreateRequest struct {
 	TagIDs    []string `json:"tag_ids"`
 }
 
-// EntryCreateData is the normalized data consumed by the usecase.
+// EntryCreateData はユースケースで使う正規化データ。
 type EntryCreateData struct {
 	Title     string
 	Notes     string
@@ -31,7 +31,7 @@ type EntryCreateData struct {
 	TagIDs    []uuid.UUID
 }
 
-// Normalize validates and converts the request into typed data.
+// Normalize はリクエストを検証し型付けデータへ変換する。
 func (r EntryCreateRequest) Normalize() (EntryCreateData, error) {
 	title := strings.TrimSpace(r.Title)
 	if title == "" {
@@ -76,7 +76,7 @@ func (r EntryCreateRequest) Normalize() (EntryCreateData, error) {
 	}, nil
 }
 
-// EntryUpdateRequest captures patch payloads.
+// EntryUpdateRequest は更新用のパッチペイロードを受け取る。
 type EntryUpdateRequest struct {
 	Title     *string   `json:"title"`
 	Notes     *string   `json:"notes"`
@@ -88,7 +88,7 @@ type EntryUpdateRequest struct {
 	TagIDs    *[]string `json:"tag_ids"`
 }
 
-// EntryUpdateData is the normalized representation with typed values.
+// EntryUpdateData は型付けされた正規化表現。
 type EntryUpdateData struct {
 	Title      *string
 	Notes      *string
@@ -102,7 +102,7 @@ type EntryUpdateData struct {
 	TagIDsSet  bool
 }
 
-// Normalize validates patch data.
+// Normalize はパッチデータを検証する。
 func (r EntryUpdateRequest) Normalize() (EntryUpdateData, error) {
 	if r.Title != nil {
 		trimmed := strings.TrimSpace(*r.Title)
@@ -172,13 +172,13 @@ func parseTimePtr(raw *string, field string) (*time.Time, error) {
 	return &tt, nil
 }
 
-// EntryFilter captures query params for listing entries (ISO 8601 strings).
+// EntryFilter は一覧取得のクエリパラメータをまとめる（ISO 8601 文字列）。
 type EntryFilter struct {
 	From *time.Time
 	To   *time.Time
 }
 
-// BuildFilter validates and converts textual filters.
+// BuildFilter は文字列フィルタを検証して変換する。
 func BuildFilter(fromRaw, toRaw string) (EntryFilter, error) {
 	from, err := parseQueryTime(fromRaw, "from")
 	if err != nil {

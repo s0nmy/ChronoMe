@@ -44,10 +44,10 @@ export function EntriesScreen({
         </div>
 
         <div className="space-y-6">
-          {/* Charts */}
+          {/* チャート */}
           <WorkCharts entries={entries} projects={projects} />
           
-          {/* Entry List */}
+          {/* エントリ一覧 */}
           <WorkEntryList 
             entries={entries} 
             projects={projects}

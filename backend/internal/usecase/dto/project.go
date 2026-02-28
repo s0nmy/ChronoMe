@@ -4,14 +4,14 @@ import (
 	"strings"
 )
 
-// ProjectCreateRequest describes the incoming body for create.
+// ProjectCreateRequest は作成リクエストの入力を表す。
 type ProjectCreateRequest struct {
 	Name        string `json:"name"`
 	Color       string `json:"color"`
 	Description string `json:"description"`
 }
 
-// Normalize validates and returns cleaned fields.
+// Normalize は検証して整形済みフィールドを返す。
 func (r ProjectCreateRequest) Normalize(defaultColor string) (ProjectInput, error) {
 	name := strings.TrimSpace(r.Name)
 	if name == "" {
@@ -28,7 +28,7 @@ func (r ProjectCreateRequest) Normalize(defaultColor string) (ProjectInput, erro
 	}, nil
 }
 
-// ProjectUpdateRequest handles partial updates.
+// ProjectUpdateRequest は部分更新を扱う。
 type ProjectUpdateRequest struct {
 	Name        *string `json:"name"`
 	Color       *string `json:"color"`
@@ -36,7 +36,7 @@ type ProjectUpdateRequest struct {
 	IsArchived  *bool   `json:"is_archived"`
 }
 
-// Normalize ensures trimmed values.
+// Normalize はトリム済み値を保証する。
 func (r ProjectUpdateRequest) Normalize() (ProjectUpdateInput, error) {
 	if r.Name != nil {
 		trimmed := strings.TrimSpace(*r.Name)
@@ -64,14 +64,14 @@ func (r ProjectUpdateRequest) Normalize() (ProjectUpdateInput, error) {
 	}, nil
 }
 
-// ProjectInput is a normalized representation.
+// ProjectInput は正規化済みの表現。
 type ProjectInput struct {
 	Name        string
 	Color       string
 	Description string
 }
 
-// ProjectUpdateInput represents optional updates.
+// ProjectUpdateInput は任意更新を表す。
 type ProjectUpdateInput struct {
 	Name        *string
 	Color       *string

@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Tag labels entries for fine-grained filtering.
+// Tag は詳細な絞り込みのためにエントリへラベルを付ける。
 type Tag struct {
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID    uuid.UUID `gorm:"type:uuid;index;not null" json:"-"`

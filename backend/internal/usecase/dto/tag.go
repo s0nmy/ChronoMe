@@ -2,13 +2,13 @@ package dto
 
 import "strings"
 
-// TagCreateRequest validates tag creation payload.
+// TagCreateRequest はタグ作成ペイロードを検証する。
 type TagCreateRequest struct {
 	Name  string `json:"name"`
 	Color string `json:"color"`
 }
 
-// Normalize ensures defaults and validation.
+// Normalize はデフォルト設定と検証を行う。
 func (r TagCreateRequest) Normalize(defaultColor string) (TagInput, error) {
 	name := strings.TrimSpace(r.Name)
 	if name == "" {
@@ -24,13 +24,13 @@ func (r TagCreateRequest) Normalize(defaultColor string) (TagInput, error) {
 	return TagInput{Name: name, Color: color}, nil
 }
 
-// TagUpdateRequest handles partial updates.
+// TagUpdateRequest は部分更新を扱う。
 type TagUpdateRequest struct {
 	Name  *string `json:"name"`
 	Color *string `json:"color"`
 }
 
-// Normalize trims and validates update fields.
+// Normalize は更新フィールドをトリムして検証する。
 func (r TagUpdateRequest) Normalize() (TagUpdateInput, error) {
 	if r.Name != nil {
 		trimmed := strings.TrimSpace(*r.Name)
@@ -52,13 +52,13 @@ func (r TagUpdateRequest) Normalize() (TagUpdateInput, error) {
 	return TagUpdateInput{Name: r.Name, Color: r.Color}, nil
 }
 
-// TagInput is normalized payload.
+// TagInput は正規化済みペイロード。
 type TagInput struct {
 	Name  string
 	Color string
 }
 
-// TagUpdateInput stores optional fields.
+// TagUpdateInput は任意フィールドを保持する。
 type TagUpdateInput struct {
 	Name  *string
 	Color *string

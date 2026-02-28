@@ -13,7 +13,7 @@ type contextKey string
 
 const userIDKey contextKey = "chronome_user_id"
 
-// WithSession ensures the request context carries the authenticated user if cookie is valid.
+// WithSession はクッキーが有効な場合に認証ユーザーをコンテキストへ付与する。
 func WithSession(store session.Store) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +29,7 @@ func WithSession(store session.Store) func(http.Handler) http.Handler {
 	}
 }
 
-// RequireAuth stops the request when no user has been attached by WithSession.
+// RequireAuth は WithSession がユーザーを付与していない場合にリクエストを止める。
 func RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if _, ok := UserIDFromContext(r.Context()); !ok {
@@ -40,7 +40,7 @@ func RequireAuth(next http.Handler) http.Handler {
 	})
 }
 
-// UserIDFromContext extracts the authenticated user ID.
+// UserIDFromContext は認証済みユーザー ID を取り出す。
 func UserIDFromContext(ctx context.Context) (uuid.UUID, bool) {
 	if val, ok := ctx.Value(userIDKey).(uuid.UUID); ok {
 		return val, true
@@ -48,5 +48,5 @@ func UserIDFromContext(ctx context.Context) (uuid.UUID, bool) {
 	return uuid.Nil, false
 }
 
-// SessionCookieName is public so handlers stay consistent.
+// SessionCookieName はハンドラ間で一貫させるため公開している。
 const SessionCookieName = "chronome_session"

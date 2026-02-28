@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Entry represents a block of time that may still be running when EndedAt is zero.
+// Entry は EndedAt がゼロの間は実行中になり得る時間ブロックを表す。
 type Entry struct {
 	ID          uuid.UUID  `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID      uuid.UUID  `gorm:"type:uuid;index;not null" json:"user_id"`
@@ -37,7 +37,7 @@ func (e *Entry) Validate() error {
 	return nil
 }
 
-// UpdateDuration recalculates duration using StartedAt/EndedAt.
+// UpdateDuration は StartedAt/EndedAt から duration を再計算する。
 func (e *Entry) UpdateDuration(now time.Time) {
 	end := now
 	if e.EndedAt != nil {

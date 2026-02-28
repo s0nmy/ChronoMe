@@ -6,7 +6,7 @@ import (
 	"chronome/internal/usecase/provider"
 )
 
-// SystemClock implements provider.Clock using the OS clock.
+// SystemClock は OS の時計で provider.Clock を実装する。
 type SystemClock struct{}
 
 func (SystemClock) Now() time.Time {

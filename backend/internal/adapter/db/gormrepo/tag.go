@@ -9,7 +9,7 @@ import (
 	"chronome/internal/domain/entity"
 )
 
-// TagRepository implements repository.TagRepository.
+// TagRepository は repository.TagRepository を実装する。
 type TagRepository struct {
 	db *gorm.DB
 }

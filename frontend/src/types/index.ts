@@ -41,7 +41,7 @@ export interface Entry {
   tagIds?: string[];
   startedAt: Date;
   endedAt: Date | null;
-  durationSec: number; // seconds, calculated field
+  durationSec: number; // 秒（計算済みフィールド）
   ratio: number; // 1.0 = 100%
   isBreak: boolean;
   userId: string;
@@ -50,8 +50,8 @@ export interface Entry {
 }
 
 export interface DailySummary {
-  date: string; // YYYY-MM-DD
-  totalDurationSec: number; // seconds
+  date: string; // YYYY-MM-DD 形式
+  totalDurationSec: number; // 秒
   entryCount: number;
   projects: Array<{
     projectId: string;
@@ -61,7 +61,7 @@ export interface DailySummary {
 }
 
 export interface WeeklySummary {
-  weekStart: string; // YYYY-MM-DD (Monday)
+  weekStart: string; // YYYY-MM-DD 形式（月曜開始）
   totalDurationSec: number;
   entryCount: number;
   dailyBreakdown: Array<{
@@ -77,7 +77,7 @@ export interface WeeklySummary {
 }
 
 export interface MonthlySummary {
-  month: string; // YYYY-MM
+  month: string; // YYYY-MM 形式
   totalDurationSec: number;
   entryCount: number;
   weeklyBreakdown: Array<{
@@ -123,9 +123,9 @@ export interface ActiveEntry {
 // 手入力用のエントリデータ
 export interface ManualEntryData {
   projectId: string;
-  date: string; // YYYY-MM-DD
-  startTime: string; // HH:MM
-  endTime: string; // HH:MM
+  date: string; // YYYY-MM-DD 形式
+  startTime: string; // HH:MM 形式
+  endTime: string; // HH:MM 形式
   title?: string;
   notes?: string;
   tags: string[];

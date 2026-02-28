@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// User represents an account that owns all other resources.
+// User は他のリソースを所有するアカウントを表す。
 type User struct {
 	ID           uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	Email        string    `gorm:"uniqueIndex;size:254;not null" json:"email"`
@@ -19,7 +19,7 @@ type User struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
-// Normalize prepares the entity before persistence.
+// Normalize は永続化前にエンティティを整形する。
 func (u *User) Normalize() {
 	u.Email = strings.ToLower(strings.TrimSpace(u.Email))
 	if u.TimeZone == "" {
@@ -27,7 +27,7 @@ func (u *User) Normalize() {
 	}
 }
 
-// Validate performs minimal server side checks.
+// Validate は最小限のサーバー側チェックを行う。
 func (u *User) Validate() error {
 	if u.Email == "" {
 		return errors.New("email is required")

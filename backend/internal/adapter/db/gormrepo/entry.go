@@ -10,7 +10,7 @@ import (
 	"chronome/internal/domain/repository"
 )
 
-// EntryRepository implements repository.EntryRepository with GORM.
+// EntryRepository は GORM で repository.EntryRepository を実装する。
 type EntryRepository struct {
 	db *gorm.DB
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Project groups entries for reporting purposes.
+// Project はレポート用にエントリをまとめる。
 type Project struct {
 	ID          uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID      uuid.UUID `gorm:"type:uuid;index;not null" json:"user_id"`

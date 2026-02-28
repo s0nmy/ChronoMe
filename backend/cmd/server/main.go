@@ -38,13 +38,13 @@ func main() {
 		log.Fatalf("failed to initialize session store: %v", err)
 	}
 
-	// repositories
+	// リポジトリ
 	userRepo := gormrepo.NewUserRepository(db)
 	projectRepo := gormrepo.NewProjectRepository(db)
 	entryRepo := gormrepo.NewEntryRepository(db)
 	tagRepo := gormrepo.NewTagRepository(db)
 
-	// usecases
+	// ユースケース
 	authUC := usecase.NewAuthUsecase(userRepo)
 	projectUC := usecase.NewProjectUsecase(projectRepo, cfg)
 	tagUC := usecase.NewTagUsecase(tagRepo, cfg)

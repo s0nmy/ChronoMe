@@ -12,7 +12,7 @@ import (
 	"chronome/internal/usecase/provider"
 )
 
-// ProjectUsecase holds business logic for project CRUD.
+// ProjectUsecase はプロジェクト CRUD のビジネスロジックを持つ。
 type ProjectUsecase struct {
 	projects repository.ProjectRepository
 	cfg      provider.AppConfig

@@ -27,7 +27,7 @@ const (
 	maxReportFutureDays   = 31
 )
 
-// APIHandler wires HTTP endpoints to usecases.
+// APIHandler は HTTP エンドポイントをユースケースに接続する。
 type APIHandler struct {
 	auth     *usecase.AuthUsecase
 	projects *usecase.ProjectUsecase
@@ -50,7 +50,7 @@ func NewAPIHandler(cfg config.Config, sessions sess.Store, auth *usecase.AuthUse
 	}
 }
 
-// Router builds the chi router with middleware and routes registered.
+// Router はミドルウェアとルートを登録した chi ルーターを構築する。
 func (h *APIHandler) Router() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(cors.Handler(cors.Options{
@@ -487,9 +487,9 @@ func (h *APIHandler) monthlyReport(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, report)
 }
 
-// helper structures ----------------------------------------------------------
+// 補助構造体 ----------------------------------------------------------------
 
-// helpers -------------------------------------------------------------------
+// ヘルパー ------------------------------------------------------------------
 
 func buildEntryFilter(r *http.Request) (repository.EntryFilter, error) {
 	filter, err := dto.BuildFilter(r.URL.Query().Get("from"), r.URL.Query().Get("to"))

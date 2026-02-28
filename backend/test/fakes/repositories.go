@@ -10,7 +10,7 @@ import (
 	"chronome/internal/domain/repository"
 )
 
-// FakeUserRepository implements repository.UserRepository for tests.
+// FakeUserRepository はテスト用に repository.UserRepository を実装する。
 type FakeUserRepository struct {
 	CreateFn     func(context.Context, *entity.User) error
 	GetByEmailFn func(context.Context, string) (*entity.User, error)
@@ -38,7 +38,7 @@ func (f *FakeUserRepository) GetByID(ctx context.Context, id uuid.UUID) (*entity
 	return nil, errors.New("GetByID not implemented")
 }
 
-// FakeProjectRepository implements repository.ProjectRepository for tests.
+// FakeProjectRepository はテスト用に repository.ProjectRepository を実装する。
 type FakeProjectRepository struct {
 	CreateFn  func(context.Context, *entity.Project) error
 	ListFn    func(context.Context, uuid.UUID) ([]entity.Project, error)
@@ -82,7 +82,7 @@ func (f *FakeProjectRepository) Delete(ctx context.Context, userID uuid.UUID, id
 	return nil
 }
 
-// FakeEntryRepository implements repository.EntryRepository for tests.
+// FakeEntryRepository はテスト用に repository.EntryRepository を実装する。
 type FakeEntryRepository struct {
 	CreateFn      func(context.Context, *entity.Entry) error
 	ListFn        func(context.Context, uuid.UUID, repository.EntryFilter) ([]entity.Entry, error)
@@ -134,7 +134,7 @@ func (f *FakeEntryRepository) ReplaceTags(ctx context.Context, entry *entity.Ent
 	return nil
 }
 
-// FakeTagRepository implements repository.TagRepository for tests.
+// FakeTagRepository はテスト用に repository.TagRepository を実装する。
 type FakeTagRepository struct {
 	CreateFn  func(context.Context, *entity.Tag) error
 	ListFn    func(context.Context, uuid.UUID) ([]entity.Tag, error)

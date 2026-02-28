@@ -10,7 +10,7 @@ import (
 	"chronome/internal/domain/entity"
 )
 
-// UserRepository implements repository.UserRepository using GORM.
+// UserRepository は GORM で repository.UserRepository を実装する。
 type UserRepository struct {
 	db *gorm.DB
 }
