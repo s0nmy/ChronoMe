@@ -11,17 +11,15 @@ Go 製バックエンドと React + TypeScript フロントエンドで構成し
 
 ## 使い方
 
-ローカル開発では以下のコマンドで各サービスを起動します。
+ローカル開発では以下を実行します。
 
 ```bash
-cd backend
-go run ./cmd/server
+make dev
 ```
 
 ```bash
-cd frontend
-npm install
-npm run dev
+make backend  # or make b
+make frontend # or make f
 ```
 
 ## ドキュメント
