@@ -26,16 +26,21 @@ npm run dev
 
 ## ドキュメント
 
-- 設計ドキュメント: `.docs/DesignDoc.md`
-- API/仕様: `docs/`
-- コミットルール: `docs/CommitGuidelines.md`
+- 設計ドキュメント: [`.docs/DesignDoc.md`](.docs/DesignDoc.md)
+- API/仕様: [`docs/`](docs/)
+- コミットルール: [`docs/CommitGuidelines.md`](docs/CommitGuidelines.md)
 
 ## Contributing
 
-詳細は [CONTRIBUTING.md](CONTRIBUTING.md) と `.docs/DesignDoc.md` を参照してください。
+詳細は [CONTRIBUTING.md](CONTRIBUTING.md) と [`.docs/DesignDoc.md`](.docs/DesignDoc.md) を参照してください。
 
 - PR / MR 手順: ブランチ作成 → テスト/静的解析 → PR/MR 作成
-- ディレクトリ構成: `backend/`, `frontend/`, `docs/`, `.docs/`
 - コーディングスタンダード: Go は `gofmt`、フロントは ESLint と Prettier
-- テスト: `cd backend && go test ./...`
-- lint / 静的解析: `cd frontend && npm run lint`
+- テスト:
+  ```bash
+  cd backend && go test ./...
+  ```
+- lint / 静的解析:
+  ```bash
+  cd frontend && npm run lint
+  ```
