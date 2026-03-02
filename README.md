@@ -24,6 +24,7 @@ make frontend # or make f
 
 ## ドキュメント
 
+- PRD: [`docs/PRD.md`](docs/PRD.md)
 - 設計ドキュメント: [`.docs/DesignDoc.md`](.docs/DesignDoc.md)
 - API/仕様: [`docs/`](docs/)
 - コミットルール: [`docs/CommitGuidelines.md`](docs/CommitGuidelines.md)
