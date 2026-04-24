@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Play, Pause, Square, Plus, Zap, Timer } from "lucide-react";
+import { Play, Pause, Square, Plus, Timer } from "lucide-react";
 import type { ActiveEntry, Project } from "../types";
 import { formatDuration } from "../utils/time";
 import { Button } from "./ui/button";
