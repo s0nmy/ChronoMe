@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: chronome
+      POSTGRES_PASSWORD: chronome_dev
+      POSTGRES_DB: chronome
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chronome"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      APP_ENV: development
+      SERVER_ADDRESS: ":8080"
+      DB_DRIVER: postgres
+      DB_DSN: "host=postgres user=chronome password=chronome_dev dbname=chronome port=5432 sslmode=disable"
+      SESSION_SECRET: local-dev-secret-32-characters!!
+      SESSION_COOKIE_SECURE: "false"
+      ALLOWED_ORIGIN: "http://localhost:3000"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: "http://localhost:8080"
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

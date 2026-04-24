@@ -1,0 +1,33 @@
+# Dependencies and build artifacts
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test files
+*_test.go
+test/
+coverage.out
+coverage.html
+
+# Local development
+*.db
+dev.db
+.env
+.env.local
+
+# Documentation
+*.md
+docs/
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
