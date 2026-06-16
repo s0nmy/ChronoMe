@@ -27,6 +27,7 @@ make frontend # or make f
 - PRD: [`docs/PRD.md`](docs/PRD.md)
 - 設計ドキュメント: [`.docs/DesignDoc.md`](.docs/DesignDoc.md)
 - API/仕様: [`docs/`](docs/)
+- GCP デプロイ: [`docs/GCPDeployment.md`](docs/GCPDeployment.md)
 - コミットルール: [`docs/CommitGuidelines.md`](docs/CommitGuidelines.md)
 
 ## Contributing
