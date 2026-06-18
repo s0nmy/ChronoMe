@@ -16,6 +16,7 @@ Optional environment variables:
   GCP_REGION                  Default: asia-northeast1
   ARTIFACT_REGISTRY_REPO      Default: chronome
   CLOUD_SQL_INSTANCE          Default: chronome-db
+  CLOUD_RUN_SERVICE_ACCOUNT   Default: chronome-runtime@<project>.iam.gserviceaccount.com
   BACKEND_SERVICE_NAME        Default: chronome-backend-<environment>
   FRONTEND_SERVICE_NAME       Default: chronome-frontend-<environment>
   FRONTEND_API_URL            Existing backend URL. If empty, derived after backend deploy.
@@ -52,6 +53,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 GCP_REGION="${GCP_REGION:-asia-northeast1}"
 ARTIFACT_REGISTRY_REPO="${ARTIFACT_REGISTRY_REPO:-chronome}"
 CLOUD_SQL_INSTANCE="${CLOUD_SQL_INSTANCE:-chronome-db}"
+CLOUD_RUN_SERVICE_ACCOUNT="${CLOUD_RUN_SERVICE_ACCOUNT:-chronome-runtime@${GCP_PROJECT_ID}.iam.gserviceaccount.com}"
 BACKEND_SERVICE_NAME="${BACKEND_SERVICE_NAME:-chronome-backend-${ENVIRONMENT}}"
 FRONTEND_SERVICE_NAME="${FRONTEND_SERVICE_NAME:-chronome-frontend-${ENVIRONMENT}}"
 BACKEND_MIN_INSTANCES="${BACKEND_MIN_INSTANCES:-0}"
@@ -67,6 +69,7 @@ CONNECTION_NAME="${GCP_PROJECT_ID}:${GCP_REGION}:${CLOUD_SQL_INSTANCE}"
 echo "Using project: ${GCP_PROJECT_ID}"
 echo "Using region: ${GCP_REGION}"
 echo "Deploying environment: ${ENVIRONMENT}"
+echo "Using runtime service account: ${CLOUD_RUN_SERVICE_ACCOUNT}"
 
 gcloud config set project "${GCP_PROJECT_ID}" >/dev/null
 
@@ -81,8 +84,9 @@ gcloud run deploy "${BACKEND_SERVICE_NAME}" \
     --region "${GCP_REGION}" \
     --platform managed \
     --allow-unauthenticated \
+    --service-account "${CLOUD_RUN_SERVICE_ACCOUNT}" \
     --add-cloudsql-instances "${CONNECTION_NAME}" \
-    --set-env-vars "APP_ENV=${ENVIRONMENT},SERVER_ADDRESS=:8080,DB_DRIVER=postgres,SESSION_COOKIE_SECURE=true,ALLOWED_ORIGIN=http://localhost:3000" \
+    --set-env-vars "APP_ENV=${ENVIRONMENT},SERVER_ADDRESS=:8080,DB_DRIVER=postgres,SESSION_COOKIE_SECURE=true,SESSION_COOKIE_SAMESITE=none,ALLOWED_ORIGIN=http://localhost:3000" \
     --set-secrets "DB_DSN=chronome-db-dsn:latest,SESSION_SECRET=chronome-session-secret:latest" \
     --min-instances "${BACKEND_MIN_INSTANCES}" \
     --max-instances "${BACKEND_MAX_INSTANCES}"
@@ -100,6 +104,7 @@ gcloud run deploy "${FRONTEND_SERVICE_NAME}" \
     --region "${GCP_REGION}" \
     --platform managed \
     --allow-unauthenticated \
+    --service-account "${CLOUD_RUN_SERVICE_ACCOUNT}" \
     --port 8080 \
     --min-instances "${FRONTEND_MIN_INSTANCES}" \
     --max-instances "${FRONTEND_MAX_INSTANCES}"
@@ -109,7 +114,7 @@ FRONTEND_URL="$(gcloud run services describe "${FRONTEND_SERVICE_NAME}" --region
 echo "Updating backend CORS origin to: ${FRONTEND_URL}"
 gcloud run services update "${BACKEND_SERVICE_NAME}" \
     --region "${GCP_REGION}" \
-    --set-env-vars "APP_ENV=${ENVIRONMENT},SERVER_ADDRESS=:8080,DB_DRIVER=postgres,SESSION_COOKIE_SECURE=true,ALLOWED_ORIGIN=${FRONTEND_URL}"
+    --set-env-vars "APP_ENV=${ENVIRONMENT},SERVER_ADDRESS=:8080,DB_DRIVER=postgres,SESSION_COOKIE_SECURE=true,SESSION_COOKIE_SAMESITE=none,ALLOWED_ORIGIN=${FRONTEND_URL}"
 
 echo ""
 echo "Deployment complete"

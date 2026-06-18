@@ -153,6 +153,7 @@ func TestAPIHandler_LoginSetsSecureCookie(t *testing.T) {
 		SessionTTLValue:        time.Hour,
 		SessionSecret:          "another-secret",
 		SessionCookieSecure:    true,
+		SessionCookieSameSite:  "none",
 		DefaultProjectColorHex: "#3B82F6",
 	}
 	tagUC := usecase.NewTagUsecase(&fakes.FakeTagRepository{}, cfg)
@@ -167,6 +168,7 @@ func TestAPIHandler_LoginSetsSecureCookie(t *testing.T) {
 	handler.Router().ServeHTTP(rec, req)
 
 	require.Equal(t, http.StatusOK, rec.Code)
+	require.Contains(t, rec.Body.String(), `"csrf_token"`)
 	var sessionCookie *http.Cookie
 	var csrfCookie *http.Cookie
 	for _, cookie := range rec.Result().Cookies() {
@@ -180,7 +182,7 @@ func TestAPIHandler_LoginSetsSecureCookie(t *testing.T) {
 	require.NotNil(t, sessionCookie)
 	require.True(t, sessionCookie.Secure)
 	require.True(t, sessionCookie.HttpOnly)
-	require.Equal(t, http.SameSiteLaxMode, sessionCookie.SameSite)
+	require.Equal(t, http.SameSiteNoneMode, sessionCookie.SameSite)
 	require.Equal(t, "/", sessionCookie.Path)
 	require.NotZero(t, sessionCookie.Expires)
 	require.True(t, sessionCookie.Expires.After(time.Now().Add(30*time.Minute)))
@@ -188,7 +190,7 @@ func TestAPIHandler_LoginSetsSecureCookie(t *testing.T) {
 	require.NotNil(t, csrfCookie)
 	require.False(t, csrfCookie.HttpOnly)
 	require.True(t, csrfCookie.Secure)
-	require.Equal(t, http.SameSiteLaxMode, csrfCookie.SameSite)
+	require.Equal(t, http.SameSiteNoneMode, csrfCookie.SameSite)
 	require.Equal(t, middleware.CSRFCookieName, csrfCookie.Name)
 }
 

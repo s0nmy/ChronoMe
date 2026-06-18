@@ -17,6 +17,7 @@ type Config struct {
 	SessionTTLValue        time.Duration
 	SessionSecret          string
 	SessionCookieSecure    bool
+	SessionCookieSameSite  string
 	AllowedOrigin          string
 	Environment            string
 	DefaultProjectColorHex string
@@ -32,6 +33,7 @@ func Load() Config {
 		AllowedOrigin:          getEnv("ALLOWED_ORIGIN", "http://localhost:3000"),
 		SessionTTLValue:        12 * time.Hour,
 		SessionSecret:          getEnv("SESSION_SECRET", DefaultSessionSecret),
+		SessionCookieSameSite:  getEnv("SESSION_COOKIE_SAMESITE", "lax"),
 		Environment:            env,
 		DefaultProjectColorHex: getEnv("DEFAULT_PROJECT_COLOR", "#3B82F6"),
 	}

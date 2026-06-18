@@ -22,6 +22,8 @@ Cloud Run + Cloud SQL (PostgreSQL) の構成を採用。
   - Cloud Build API
   - Secret Manager API
 - [ ] サービスアカウントの作成と権限設定
+  - GitHub Actions 用サービスアカウント
+  - Cloud Run 実行用サービスアカウント
 
 ---
 
@@ -176,6 +178,7 @@ Cloud Run + Cloud SQL (PostgreSQL) の構成を採用。
 | `DB_DSN` | DB接続文字列 | (Secret) | (Secret) |
 | `SESSION_SECRET` | セッション秘密鍵 | (Secret) | (Secret) |
 | `SESSION_COOKIE_SECURE` | Secure Cookie | true | true |
+| `SESSION_COOKIE_SAMESITE` | Cookie SameSite | none | none |
 | `ALLOWED_ORIGIN` | 許可オリジン | ステージングURL | 本番URL |
 
 ---

@@ -34,6 +34,7 @@ CLOUD_SQL_INSTANCE="chronome-db"
 WORKLOAD_IDENTITY_POOL="github-pool"
 WORKLOAD_IDENTITY_PROVIDER="github-provider"
 SERVICE_ACCOUNT_NAME="github-actions"
+RUNTIME_SERVICE_ACCOUNT_NAME="chronome-runtime"
 
 main() {
     check_env
@@ -49,6 +50,7 @@ main() {
     gcloud services enable \
         run.googleapis.com \
         sqladmin.googleapis.com \
+        cloudbuild.googleapis.com \
         artifactregistry.googleapis.com \
         secretmanager.googleapis.com \
         iamcredentials.googleapis.com \
@@ -119,7 +121,7 @@ main() {
     # Setup Workload Identity Federation for GitHub Actions
     echo_info "Setting up Workload Identity Federation..."
 
-    # Create service account
+    # Create GitHub Actions service account
     if ! gcloud iam service-accounts describe "${SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com" &>/dev/null; then
         gcloud iam service-accounts create "${SERVICE_ACCOUNT_NAME}" \
             --display-name="GitHub Actions Service Account"
@@ -132,12 +134,33 @@ main() {
     ROLES=(
         "roles/run.admin"
         "roles/artifactregistry.writer"
+        "roles/cloudbuild.builds.editor"
         "roles/secretmanager.secretAccessor"
         "roles/iam.serviceAccountUser"
     )
     for role in "${ROLES[@]}"; do
         gcloud projects add-iam-policy-binding "${GCP_PROJECT_ID}" \
             --member="serviceAccount:${SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
+            --role="${role}" \
+            --quiet
+    done
+
+    # Create Cloud Run runtime service account
+    if ! gcloud iam service-accounts describe "${RUNTIME_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com" &>/dev/null; then
+        gcloud iam service-accounts create "${RUNTIME_SERVICE_ACCOUNT_NAME}" \
+            --display-name="ChronoMe Cloud Run Runtime"
+    else
+        echo_warn "Runtime service account already exists"
+    fi
+
+    echo_info "Granting IAM roles to runtime service account..."
+    RUNTIME_ROLES=(
+        "roles/cloudsql.client"
+        "roles/secretmanager.secretAccessor"
+    )
+    for role in "${RUNTIME_ROLES[@]}"; do
+        gcloud projects add-iam-policy-binding "${GCP_PROJECT_ID}" \
+            --member="serviceAccount:${RUNTIME_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
             --role="${role}" \
             --quiet
     done
@@ -190,6 +213,7 @@ main() {
     echo "PRODUCTION_FRONTEND_URL: https://chronome-frontend-xxxxx-an.a.run.app"
     echo ""
     echo "Cloud SQL Connection Name: ${CONNECTION_NAME}"
+    echo "Cloud Run Runtime Service Account: ${RUNTIME_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
     echo ""
     echo_warn "Don't forget to set the chronome-db-dsn secret with the database connection string!"
 }

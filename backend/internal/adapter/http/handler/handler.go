@@ -158,7 +158,7 @@ func (h *APIHandler) login(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   h.cfg.SessionCookieSecure,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: h.cookieSameSite(),
 		MaxAge:   int(h.cfg.SessionTTL().Seconds()),
 		Expires:  expiresAt,
 	})
@@ -168,7 +168,7 @@ func (h *APIHandler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.setCSRFCookie(w, csrfToken, expiresAt)
-	respondJSON(w, http.StatusOK, map[string]any{"user": mapUser(user)})
+	respondJSON(w, http.StatusOK, map[string]any{"user": mapUser(user), "csrf_token": csrfToken})
 }
 
 func (h *APIHandler) logout(w http.ResponseWriter, r *http.Request) {
@@ -178,7 +178,7 @@ func (h *APIHandler) logout(w http.ResponseWriter, r *http.Request) {
 		cookie.Path = "/"
 		cookie.HttpOnly = true
 		cookie.Secure = h.cfg.SessionCookieSecure
-		cookie.SameSite = http.SameSiteLaxMode
+		cookie.SameSite = h.cookieSameSite()
 		cookie.MaxAge = -1
 		cookie.Expires = time.Unix(0, 0)
 		http.SetCookie(w, cookie)
@@ -608,7 +608,7 @@ func (h *APIHandler) setCSRFCookie(w http.ResponseWriter, token string, expiresA
 		Path:     "/",
 		HttpOnly: false,
 		Secure:   h.cfg.SessionCookieSecure,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: h.cookieSameSite(),
 		MaxAge:   int(h.cfg.SessionTTL().Seconds()),
 		Expires:  expiresAt,
 	})
@@ -621,10 +621,21 @@ func (h *APIHandler) clearCSRFCookie(w http.ResponseWriter) {
 		Path:     "/",
 		HttpOnly: false,
 		Secure:   h.cfg.SessionCookieSecure,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: h.cookieSameSite(),
 		MaxAge:   -1,
 		Expires:  time.Unix(0, 0),
 	})
+}
+
+func (h *APIHandler) cookieSameSite() http.SameSite {
+	switch strings.ToLower(strings.TrimSpace(h.cfg.SessionCookieSameSite)) {
+	case "none":
+		return http.SameSiteNoneMode
+	case "strict":
+		return http.SameSiteStrictMode
+	default:
+		return http.SameSiteLaxMode
+	}
 }
 
 func (h *APIHandler) resolveLocation(r *http.Request, user *entity.User) (*time.Location, error) {

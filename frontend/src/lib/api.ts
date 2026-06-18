@@ -3,6 +3,7 @@ import type { Entry, Project, ProjectFormData, Tag, User } from '../types';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
 const CSRF_COOKIE_NAME = 'chronome_csrf';
 const CSRF_HEADER_NAME = 'X-CSRF-Token';
+const CSRF_STORAGE_KEY = 'chronome_csrf_token';
 
 export class APIError extends Error {
   status: number;
@@ -23,6 +24,12 @@ function requiresCsrf(method: string) {
 }
 
 function getCsrfToken(): string | null {
+  if (typeof window !== 'undefined') {
+    const storedToken = window.localStorage.getItem(CSRF_STORAGE_KEY);
+    if (storedToken) {
+      return storedToken;
+    }
+  }
   if (typeof document === 'undefined') {
     return null;
   }
@@ -34,6 +41,17 @@ function getCsrfToken(): string | null {
     return null;
   }
   return decodeURIComponent(cookie.split('=').at(1) ?? '');
+}
+
+function setCsrfToken(token: string | undefined) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  if (token) {
+    window.localStorage.setItem(CSRF_STORAGE_KEY, token);
+  } else {
+    window.localStorage.removeItem(CSRF_STORAGE_KEY);
+  }
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -160,11 +178,12 @@ export async function signup(params: { email: string; password: string; displayN
 }
 
 export async function login(email: string, password: string) {
-  const response = await request<{ user: any }>('/api/auth/login', {
+  const response = await request<{ user: any; csrf_token?: string }>('/api/auth/login', {
     method: 'POST',
     skipCsrf: true,
     body: JSON.stringify({ email, password }),
   });
+  setCsrfToken(response.csrf_token);
   return mapUser(response.user);
 }
 
@@ -181,7 +200,11 @@ export async function fetchCurrentUser(): Promise<User | null> {
 }
 
 export async function logout() {
-  await request('/api/auth/logout', { method: 'POST' });
+  try {
+    await request('/api/auth/logout', { method: 'POST' });
+  } finally {
+    setCsrfToken(undefined);
+  }
 }
 
 export async function listProjects(): Promise<Project[]> {
