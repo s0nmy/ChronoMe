@@ -24,6 +24,7 @@ func (r *EntryRepository) Create(ctx context.Context, entry *entity.Entry) error
 }
 
 func (r *EntryRepository) ListByUser(ctx context.Context, userID uuid.UUID, filter repository.EntryFilter) ([]entity.Entry, error) {
+	// すべての検索は user_id で絞り、アプリ層からの取り違えでも他ユーザーのデータを返さない。
 	query := r.db.WithContext(ctx).Model(&entity.Entry{}).Preload("Tags").Where("user_id = ?", userID)
 	if filter.From != nil {
 		query = query.Where("started_at >= ?", filter.From)
@@ -35,6 +36,7 @@ func (r *EntryRepository) ListByUser(ctx context.Context, userID uuid.UUID, filt
 		query = query.Where("project_id = ?", filter.ProjectID)
 	}
 	if filter.TagID != nil {
+		// タグ絞り込みは many-to-many の中間テーブル entry_tags を JOIN する。
 		query = query.Joins("JOIN entry_tags ON entry_tags.entry_id = entries.id").
 			Where("entry_tags.tag_id = ?", *filter.TagID)
 	}
@@ -66,6 +68,7 @@ func (r *EntryRepository) ReplaceTags(ctx context.Context, entry *entity.Entry, 
 	db := r.db.WithContext(ctx)
 	assoc := db.Model(entry).Association("Tags")
 	if len(tagIDs) == 0 {
+		// 空配列は「タグをすべて外す」という明示的な更新として扱う。
 		return assoc.Clear()
 	}
 	tags := make([]entity.Tag, len(tagIDs))

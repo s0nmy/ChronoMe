@@ -24,6 +24,7 @@ func NewEntryUsecase(entries repository.EntryRepository, tags repository.TagRepo
 }
 
 func (u *EntryUsecase) Create(ctx context.Context, userID uuid.UUID, input dto.EntryCreateRequest) (*entity.Entry, error) {
+	// DTO で入力形式を整え、usecase では業務上の組み立てに集中する。
 	data, err := input.Normalize()
 	if err != nil {
 		return nil, err
@@ -46,6 +47,7 @@ func (u *EntryUsecase) Create(ctx context.Context, userID uuid.UUID, input dto.E
 		end := data.EndedAt.UTC()
 		entry.EndedAt = &end
 	}
+	// タグはユーザー所有の既存タグだけを紐づけ、他ユーザーのタグ混入を防ぐ。
 	tags, err := u.loadTags(ctx, userID, data.TagIDs)
 	if err != nil {
 		return nil, err
@@ -54,6 +56,7 @@ func (u *EntryUsecase) Create(ctx context.Context, userID uuid.UUID, input dto.E
 	if entry.EndedAt != nil {
 		entry.UpdateDuration(entry.EndedAt.UTC())
 	}
+	// entity の不変条件を通してから repository に渡す。
 	if err := entry.Validate(); err != nil {
 		return nil, err
 	}
@@ -77,6 +80,7 @@ func (u *EntryUsecase) Update(ctx context.Context, userID uuid.UUID, id uuid.UUI
 	if err != nil {
 		return nil, err
 	}
+	// userID 付きで取得することで、別ユーザーのエントリ更新を repository 側でも防ぐ。
 	entry, err := u.entries.GetByID(ctx, userID, id)
 	if err != nil {
 		return nil, err
@@ -115,6 +119,7 @@ func (u *EntryUsecase) Update(ctx context.Context, userID uuid.UUID, id uuid.UUI
 		}
 		entry.Tags = tags
 	}
+	// 実行中エントリは現在時刻まで、終了済みエントリは EndedAt までの duration に更新する。
 	entry.UpdateDuration(u.clock.Now())
 	if err := entry.Validate(); err != nil {
 		return nil, err
@@ -153,6 +158,7 @@ func (u *EntryUsecase) loadTags(ctx context.Context, userID uuid.UUID, tagIDs []
 		if _, ok := seen[id]; ok {
 			continue
 		}
+		// GetByID に userID を渡し、存在確認と所有者確認を同時に行う。
 		tag, err := u.tags.GetByID(ctx, userID, id)
 		if err != nil {
 			return nil, dto.ValidationError{Field: "tag_ids", Message: "contains unknown tag"}

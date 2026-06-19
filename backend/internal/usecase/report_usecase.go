@@ -27,6 +27,7 @@ type ReportRange struct {
 }
 
 func (r ReportRange) utcBounds() (time.Time, time.Time) {
+	// DB には UTC で保存されるため、検索境界だけ UTC に変換する。
 	return r.Start.In(time.UTC), r.End.In(time.UTC)
 }
 
@@ -128,6 +129,7 @@ func (u *ReportUsecase) Weekly(ctx context.Context, userID uuid.UUID, rr ReportR
 	tagTotals := make(map[uuid.UUID]int64)
 	tagMeta := make(map[uuid.UUID]entity.Tag)
 	for _, entry := range entries {
+		// 集計の所属日は保存時刻ではなく、ユーザーのローカル日付で決める。
 		localStarted := entry.StartedAt.In(loc)
 		if localStarted.Before(rr.Start) || !localStarted.Before(rr.End) {
 			continue
@@ -149,6 +151,7 @@ func (u *ReportUsecase) Weekly(ctx context.Context, userID uuid.UUID, rr ReportR
 	}
 	days := make([]ReportDay, 7)
 	for i := 0; i < 7; i++ {
+		// エントリがない日も 0 秒として返し、フロント側の欠損補完を不要にする。
 		day := rr.Start.AddDate(0, 0, i)
 		key := day.Format("2006-01-02")
 		days[i] = ReportDay{Date: key, TotalSeconds: dayTotals[key]}
@@ -180,6 +183,7 @@ func (u *ReportUsecase) Monthly(ctx context.Context, userID uuid.UUID, rr Report
 	tagMeta := make(map[uuid.UUID]entity.Tag)
 	loc := rr.location()
 	for _, entry := range entries {
+		// 月次も週次と同じく、ユーザーのタイムゾーン上の月内だけを対象にする。
 		localDate := entry.StartedAt.In(loc)
 		if localDate.Before(rr.Start) || !localDate.Before(rr.End) {
 			continue
@@ -243,6 +247,7 @@ func startOfWeek(t time.Time) time.Time {
 
 func (u *ReportUsecase) buildProjectBreakdown(ctx context.Context, userID uuid.UUID, totals map[uuid.UUID]int64, unassigned int64) []ProjectBreakdown {
 	meta := make(map[uuid.UUID]entity.Project)
+	// 集計対象エントリに紐づく project 表示名を後から解決する。
 	if projects, err := u.projects.ListByUser(ctx, userID); err == nil {
 		for _, project := range projects {
 			meta[project.ID] = project
@@ -253,6 +258,7 @@ func (u *ReportUsecase) buildProjectBreakdown(ctx context.Context, userID uuid.U
 		proj := meta[id]
 		name := proj.Name
 		if name == "" {
+			// エントリは残っているが project が削除済みの場合も集計からは落とさない。
 			name = "Deleted project"
 		}
 		idCopy := id

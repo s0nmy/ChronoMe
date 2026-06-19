@@ -19,6 +19,7 @@ import (
 )
 
 func main() {
+	// 設定は環境変数から集約し、以降の層には Config として渡す。
 	cfg := config.Load()
 
 	if cfg.Environment == "production" && (cfg.SessionSecret == config.DefaultSessionSecret || len(cfg.SessionSecret) < 32) {
@@ -33,6 +34,7 @@ func main() {
 		log.Fatalf("automigrate failed: %v", err)
 	}
 
+	// セッションは HTTP 層の関心事なので、ユースケースには渡さず handler 側で扱う。
 	sessionStore, err := sess.NewSignedCookieStore(cfg.SessionSecret)
 	if err != nil {
 		log.Fatalf("failed to initialize session store: %v", err)
@@ -46,6 +48,7 @@ func main() {
 	allocationRepo := gormrepo.NewAllocationRepository(db)
 
 	// ユースケース
+	// ユースケースは repository interface に依存し、DB 実装の詳細を知らない。
 	authUC := usecase.NewAuthUsecase(userRepo)
 	projectUC := usecase.NewProjectUsecase(projectRepo, cfg)
 	tagUC := usecase.NewTagUsecase(tagRepo, cfg)
@@ -55,6 +58,7 @@ func main() {
 
 	apiHandler := handler.NewAPIHandler(cfg, sessionStore, authUC, projectUC, tagUC, entryUC, reportUC, allocationUC)
 
+	// HTTP サーバーは chi ルーターを入口にし、各 request を handler -> usecase へ流す。
 	srv := &http.Server{
 		Addr:    cfg.Address,
 		Handler: apiHandler.Router(),
@@ -71,6 +75,7 @@ func main() {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 	<-shutdown
 
+	// SIGINT/SIGTERM 受信時は処理中の request を短時間待ってから終了する。
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
