@@ -28,7 +28,7 @@ graph TB
     end
 
     subgraph InfrastructureLayer["Infrastructure Layer"]
-        Backend["Backend API Server (Go) / iOS Storage"]
+        Backend["Backend API Server (Go)"]
     end
 
     Views --> TCA
