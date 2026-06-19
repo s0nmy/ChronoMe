@@ -74,4 +74,4 @@ npm run lint
 
 - Go バックエンドは Handler / Usecase / Repository の層構造を維持します。
 - React フロントエンドは `features/` 単位で機能を分割し、UI は `components/` に集約します。
-- 仕様や設計の詳細は `.docs/DesignDoc.md` を参照してください。
+- 仕様や設計の詳細は `docs/DesignDoc.md` を参照してください。
