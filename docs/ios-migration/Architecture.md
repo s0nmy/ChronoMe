@@ -37,7 +37,7 @@ graph TB
     Features --> Database
     Features --> Keychain
     APIClient --> Backend
-    Database --> Backend
+    %% Database（SwiftData）はローカル永続化専用で、バックエンドへのアクセスはAPIClient経由
 ```
 
 ## レイヤー構成
@@ -160,12 +160,12 @@ struct AppFeature {
     }
 
     var body: some ReducerOf<Self> {
-        Scope(state: \.auth, action: /Action.auth) {
-            AuthFeature()
+        Reduce { state, action in
+            // ルーティング等の上位アクションをここで扱う
+            return .none
         }
-        Scope(state: \.timeEntry, action: /Action.timeEntry) {
-            TimeEntryFeature()
-        }
+        .ifLet(\.auth, action: /Action.auth) { AuthFeature() }
+        .ifLet(\.timeEntry, action: /Action.timeEntry) { TimeEntryFeature() }
         // ...
     }
 }
