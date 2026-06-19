@@ -25,13 +25,13 @@ make frontend # or make f
 ## ドキュメント
 
 - PRD: [`docs/PRD.md`](docs/PRD.md)
-- 設計ドキュメント: [`.docs/DesignDoc.md`](.docs/DesignDoc.md)
+- 設計ドキュメント: [`docs/DesignDoc.md`](docs/DesignDoc.md)
 - API/仕様: [`docs/`](docs/)
 - コミットルール: [`docs/CommitGuidelines.md`](docs/CommitGuidelines.md)
 
 ## Contributing
 
-詳細は [CONTRIBUTING.md](CONTRIBUTING.md) と [`.docs/DesignDoc.md`](.docs/DesignDoc.md) を参照してください。
+詳細は [CONTRIBUTING.md](CONTRIBUTING.md) と [`docs/DesignDoc.md`](docs/DesignDoc.md) を参照してください。
 
 - PR / MR 手順: ブランチ作成 → テスト/静的解析 → PR/MR 作成
 - コーディングスタンダード: Go は `gofmt`、フロントは ESLint と Prettier
