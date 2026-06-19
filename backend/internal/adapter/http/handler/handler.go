@@ -39,6 +39,7 @@ type APIHandler struct {
 	cfg      config.Config
 }
 
+// NewAPIHandler は usecase と session store を束ねた APIHandler を生成する。
 func NewAPIHandler(cfg config.Config, sessions sess.Store, auth *usecase.AuthUsecase, projects *usecase.ProjectUsecase, tags *usecase.TagUsecase, entries *usecase.EntryUsecase, reports *usecase.ReportUsecase, allocs *usecase.AllocationUsecase) *APIHandler {
 	return &APIHandler{
 		auth:     auth,
@@ -55,6 +56,7 @@ func NewAPIHandler(cfg config.Config, sessions sess.Store, auth *usecase.AuthUse
 // Router はミドルウェアとルートを登録した chi ルーターを構築する。
 func (h *APIHandler) Router() *chi.Mux {
 	r := chi.NewRouter()
+	// フロントエンドから cookie を送るため、CORS は credentials 前提で許可する。
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{h.cfg.AllowedOrigin},
 		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
@@ -67,6 +69,7 @@ func (h *APIHandler) Router() *chi.Mux {
 	r.Get("/healthz", h.healthz)
 
 	r.Route("/api", func(api chi.Router) {
+		// 認証系は signup/login だけ未認証で、プロフィール取得と logout は session を必須にする。
 		api.Route("/auth", func(auth chi.Router) {
 			auth.Post("/signup", h.signup)
 			auth.Post("/login", h.login)
@@ -74,6 +77,7 @@ func (h *APIHandler) Router() *chi.Mux {
 			auth.With(middleware.RequireAuth, middleware.RequireCSRF(h.cfg.AllowedOrigin)).Post("/logout", h.logout)
 		})
 
+		// 参照系は CSRF 不要、状態変更系は CSRF を必須にする。
 		api.With(middleware.RequireAuth).Route("/projects", func(pr chi.Router) {
 			pr.Get("/", h.listProjects)
 			pr.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Post("/", h.createProject)
@@ -99,6 +103,7 @@ func (h *APIHandler) Router() *chi.Mux {
 		})
 
 		api.With(middleware.RequireAuth).Route("/reports", func(rr chi.Router) {
+			// レポート系は参照専用のため CSRF は不要にしている。
 			rr.Get("/daily", h.dailyReport)
 			rr.Get("/weekly", h.weeklyReport)
 			rr.Get("/monthly", h.monthlyReport)
@@ -141,6 +146,7 @@ func (h *APIHandler) login(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid payload")
 		return
 	}
+	// 認証成功後に session cookie と CSRF cookie を発行し、以降の状態変更 request を検証する。
 	user, err := h.auth.Login(r.Context(), payload.Email, payload.Password)
 	if err != nil {
 		respondError(w, http.StatusUnauthorized, "invalid credentials")
@@ -152,6 +158,7 @@ func (h *APIHandler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	expiresAt := time.Now().UTC().Add(h.cfg.SessionTTL())
+	// session cookie は HttpOnly にして JavaScript から読ませず、CSRF token は別 cookie で扱う。
 	http.SetCookie(w, &http.Cookie{
 		Name:     middleware.SessionCookieName,
 		Value:    sessionID,
@@ -317,6 +324,7 @@ func (h *APIHandler) deleteTag(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) listEntries(w http.ResponseWriter, r *http.Request) {
 	userID, _ := middleware.UserIDFromContext(r.Context())
+	// query parameter は DTO の検証を通して repository filter に変換する。
 	filter, err := buildEntryFilter(r)
 	if err != nil {
 		respondUsecaseError(w, err)
@@ -387,6 +395,7 @@ func (h *APIHandler) createAllocation(w http.ResponseWriter, r *http.Request) {
 	}
 	result, err := h.allocs.Allocate(r.Context(), payload)
 	if err != nil {
+		// 割当 API は入力制約違反を 422 として返し、JSON 形式の誤りとは区別する。
 		var valErr dto.ValidationError
 		var constraintErr usecase.AllocationConstraintError
 		switch {
@@ -415,6 +424,7 @@ func (h *APIHandler) dailyReport(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusNotFound, "user not found")
 		return
 	}
+	// レポートの日付境界はユーザーのタイムゾーンを基準にする。
 	loc, err := h.resolveLocation(r, user)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "invalid time_zone")
@@ -465,6 +475,7 @@ func (h *APIHandler) weeklyReport(w http.ResponseWriter, r *http.Request) {
 			respondError(w, http.StatusBadRequest, "invalid week_start")
 			return
 		}
+		// 任意の日付が渡されても、集計範囲は常に週初めに丸める。
 		start = normalizeWeekStart(parsed, loc)
 	}
 	if err := enforceReportWindow(start, loc); err != nil {
@@ -510,6 +521,7 @@ func (h *APIHandler) monthlyReport(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	// 月次集計は月初から翌月初までの半開区間として usecase に渡す。
 	report, err := h.reports.Monthly(r.Context(), userID, usecase.ReportRange{
 		Start:    start,
 		End:      start.AddDate(0, 1, 0),
@@ -522,11 +534,10 @@ func (h *APIHandler) monthlyReport(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, report)
 }
 
-// 補助構造体 ----------------------------------------------------------------
-
 // ヘルパー ------------------------------------------------------------------
 
 func buildEntryFilter(r *http.Request) (repository.EntryFilter, error) {
+	// 日付範囲の検証は DTO に寄せ、HTTP 固有の query parameter だけここで補完する。
 	filter, err := dto.BuildFilter(r.URL.Query().Get("from"), r.URL.Query().Get("to"))
 	if err != nil {
 		return repository.EntryFilter{}, err
@@ -554,6 +565,7 @@ func respondUsecaseError(w http.ResponseWriter, err error) {
 	var valErr dto.ValidationError
 	switch {
 	case errors.As(err, &valErr):
+		// ValidationError はクライアントが修正できる入力エラーとして返す。
 		respondError(w, http.StatusBadRequest, valErr.Error())
 	default:
 		respondError(w, http.StatusBadRequest, err.Error())
@@ -566,6 +578,7 @@ func normalizeWeekStart(t time.Time, loc *time.Location) time.Time {
 	}
 	t = t.In(loc)
 	t = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc)
+	// Go の Sunday=0 を Monday=1..Sunday=7 に寄せて月曜始まりにする。
 	weekday := int(t.Weekday())
 	if weekday == 0 {
 		weekday = 7
@@ -574,6 +587,7 @@ func normalizeWeekStart(t time.Time, loc *time.Location) time.Time {
 }
 
 func mapUser(user *entity.User) map[string]any {
+	// API response は frontend が扱う snake_case に正規化する。
 	return map[string]any{
 		"id":           user.ID,
 		"email":        user.Email,
@@ -594,6 +608,7 @@ func respondError(w http.ResponseWriter, status int, message string) {
 }
 
 func generateCSRFToken() (string, error) {
+	// ダブルサブミット cookie 用に推測困難な URL-safe token を生成する。
 	buf := make([]byte, 32)
 	if _, err := rand.Read(buf); err != nil {
 		return "", err
@@ -602,6 +617,7 @@ func generateCSRFToken() (string, error) {
 }
 
 func (h *APIHandler) setCSRFCookie(w http.ResponseWriter, token string, expiresAt time.Time) {
+	// CSRF cookie は frontend が header に転記するため HttpOnly にはしない。
 	http.SetCookie(w, &http.Cookie{
 		Name:     middleware.CSRFCookieName,
 		Value:    token,
@@ -615,6 +631,7 @@ func (h *APIHandler) setCSRFCookie(w http.ResponseWriter, token string, expiresA
 }
 
 func (h *APIHandler) clearCSRFCookie(w http.ResponseWriter) {
+	// logout 時は CSRF cookie も失効させ、古い token の再利用を避ける。
 	http.SetCookie(w, &http.Cookie{
 		Name:     middleware.CSRFCookieName,
 		Value:    "",
@@ -628,6 +645,7 @@ func (h *APIHandler) clearCSRFCookie(w http.ResponseWriter) {
 }
 
 func (h *APIHandler) resolveLocation(r *http.Request, user *entity.User) (*time.Location, error) {
+	// API の time_zone 指定を優先し、なければユーザー設定、最後に UTC を使う。
 	tz := strings.TrimSpace(r.URL.Query().Get("time_zone"))
 	if tz == "" && user != nil {
 		tz = strings.TrimSpace(user.TimeZone)
@@ -639,6 +657,7 @@ func (h *APIHandler) resolveLocation(r *http.Request, user *entity.User) (*time.
 }
 
 func enforceReportWindow(start time.Time, loc *time.Location) error {
+	// 集計 API の過大な期間指定を防ぎ、DB への負荷と誤操作を抑える。
 	now := time.Now().In(loc)
 	if start.Before(now.AddDate(0, 0, -maxReportLookbackDays)) {
 		return errors.New("requested range is too far in the past")

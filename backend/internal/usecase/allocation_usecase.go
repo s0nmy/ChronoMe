@@ -59,6 +59,7 @@ type allocationDistribution struct {
 
 // Allocate は分配計算と保存を行う。
 func (u *AllocationUsecase) Allocate(ctx context.Context, input dto.AllocationRequest) (AllocationResult, error) {
+	// 入力の正規化と制約付き分配を分け、保存前に計算結果を確定させる。
 	data, err := input.Normalize()
 	if err != nil {
 		return AllocationResult{}, err
@@ -79,6 +80,7 @@ func (u *AllocationUsecase) Allocate(ctx context.Context, input dto.AllocationRe
 	allocationEntities := make([]entity.TaskAllocation, 0, len(allocations))
 	responseItems := make([]AllocationItem, 0, len(allocations))
 	for _, allocation := range allocations {
+		// 永続化用 entity と API response 用 DTO は同じ計算結果から作る。
 		allocationEntities = append(allocationEntities, entity.TaskAllocation{
 			RequestID:        requestID,
 			TaskID:           allocation.TaskID,
@@ -135,6 +137,7 @@ func distributeAllocations(input dto.AllocationRequestData) ([]allocationDistrib
 	maxSum := 0
 	allMaxBounded := true
 	for i, task := range input.Tasks {
+		// 先に min_minutes を確保して、残り時間だけを ratio で分配する。
 		minMinutes := 0
 		if task.MinMinutes != nil {
 			minMinutes = *task.MinMinutes
@@ -174,6 +177,7 @@ func distributeAllocations(input dto.AllocationRequestData) ([]allocationDistrib
 	carried := 0
 	for i := range states {
 		task := &states[i]
+		// 小数点以下は一旦切り捨て、余りは後段で大きい順に 1 分ずつ配る。
 		desired := float64(remainingPool) * task.Normalized
 		capacity := remainingPool
 		if task.MaxMinutes != nil {
@@ -209,6 +213,7 @@ func distributeAllocations(input dto.AllocationRequestData) ([]allocationDistrib
 		if len(eligible) == 0 {
 			return nil, errors.New("unable to satisfy max constraints with provided total_minutes")
 		}
+		// 余りは「端数が大きい」「比率が大きい」「入力順が早い」の優先順位で安定的に配る。
 		sort.Slice(eligible, func(i, j int) bool {
 			ai := eligible[i]
 			aj := eligible[j]
