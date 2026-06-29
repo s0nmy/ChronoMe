@@ -537,10 +537,7 @@ final class AppFeature: ObservableObject {
         let remoteEntries = try await entryClient.listEntries(from: start, to: end)
         for remoteEntry in remoteEntries {
             let project = projects.first { $0.id == remoteEntry.projectId }
-            let resolvedTags = remoteEntry.tags.isEmpty
-                ? tags.filter { remoteEntry.tags.map(\.id).contains($0.id) }
-                : remoteEntry.tags
-            try entryStore.upsertRemoteEntry(remoteEntry, project: project, tags: resolvedTags)
+            try entryStore.upsertRemoteEntry(remoteEntry, project: project, tags: remoteEntry.tags)
         }
     }
 
