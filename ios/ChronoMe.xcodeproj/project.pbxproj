@@ -1,0 +1,322 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B10000000000000000000001 /* ChronoMeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000001 /* ChronoMeApp.swift */; };
+		B10000000000000000000002 /* AppFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000002 /* AppFeature.swift */; };
+		B10000000000000000000003 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000003 /* ContentView.swift */; };
+		B10000000000000000000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000004 /* Assets.xcassets */; };
+		B10000000000000000000005 /* AppFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000005 /* AppFeatureTests.swift */; };
+		B10000000000000000000008 /* TimeEntryRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000008 /* TimeEntryRecord.swift */; };
+		B10000000000000000000009 /* TimeEntryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000009 /* TimeEntryStore.swift */; };
+		B1000000000000000000000A /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000A /* APIClient.swift */; };
+		B1000000000000000000000B /* AuthClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000B /* AuthClient.swift */; };
+		B1000000000000000000000C /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000C /* LoginView.swift */; };
+		B1000000000000000000000D /* APIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000D /* APIClientTests.swift */; };
+		B1000000000000000000000E /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000E /* Project.swift */; };
+		B1000000000000000000000F /* Tag.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000F /* Tag.swift */; };
+		B10000000000000000000010 /* ProjectClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000010 /* ProjectClient.swift */; };
+		B10000000000000000000011 /* TagClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000011 /* TagClient.swift */; };
+		B10000000000000000000012 /* Entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000012 /* Entry.swift */; };
+		B10000000000000000000013 /* EntryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000013 /* EntryClient.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D10000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E10000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A10000000000000000000001;
+			remoteInfo = ChronoMe;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		C10000000000000000000001 /* ChronoMeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChronoMeApp.swift; sourceTree = "<group>"; };
+		C10000000000000000000002 /* AppFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFeature.swift; sourceTree = "<group>"; };
+		C10000000000000000000003 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		C10000000000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C10000000000000000000005 /* AppFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFeatureTests.swift; sourceTree = "<group>"; };
+		C10000000000000000000006 /* ChronoMe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChronoMe.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C10000000000000000000007 /* ChronoMeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChronoMeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C10000000000000000000008 /* TimeEntryRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeEntryRecord.swift; sourceTree = "<group>"; };
+		C10000000000000000000009 /* TimeEntryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeEntryStore.swift; sourceTree = "<group>"; };
+		C1000000000000000000000A /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		C1000000000000000000000B /* AuthClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthClient.swift; sourceTree = "<group>"; };
+		C1000000000000000000000C /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		C1000000000000000000000D /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientTests.swift; sourceTree = "<group>"; };
+		C1000000000000000000000E /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
+		C1000000000000000000000F /* Tag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tag.swift; sourceTree = "<group>"; };
+		C10000000000000000000010 /* ProjectClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectClient.swift; sourceTree = "<group>"; };
+		C10000000000000000000011 /* TagClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagClient.swift; sourceTree = "<group>"; };
+		C10000000000000000000012 /* Entry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entry.swift; sourceTree = "<group>"; };
+		C10000000000000000000013 /* EntryClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryClient.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A20000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A20000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		E20000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				E20000000000000000000002 /* ChronoMe */,
+				E20000000000000000000006 /* ChronoMeTests */,
+				E20000000000000000000007 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E20000000000000000000002 /* ChronoMe */ = {
+			isa = PBXGroup;
+			children = (
+				E20000000000000000000003 /* App */,
+				E20000000000000000000011 /* Features */,
+				E20000000000000000000008 /* Models */,
+				E20000000000000000000009 /* Infrastructure */,
+				E20000000000000000000004 /* Resources */,
+			);
+			path = ChronoMe;
+			sourceTree = "<group>";
+		};
+		E20000000000000000000003 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				C10000000000000000000001 /* ChronoMeApp.swift */,
+				C10000000000000000000002 /* AppFeature.swift */,
+				C10000000000000000000003 /* ContentView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		E20000000000000000000004 /* Resources */ = {
+			isa = PBXGroup;
+			children = (C10000000000000000000004 /* Assets.xcassets */,);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		E20000000000000000000006 /* ChronoMeTests */ = {
+			isa = PBXGroup;
+			children = (C10000000000000000000005 /* AppFeatureTests.swift */, C1000000000000000000000D /* APIClientTests.swift */,);
+			path = ChronoMeTests;
+			sourceTree = "<group>";
+		};
+		E20000000000000000000007 /* Products */ = {
+			isa = PBXGroup;
+			children = (C10000000000000000000006 /* ChronoMe.app */, C10000000000000000000007 /* ChronoMeTests.xctest */);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E20000000000000000000008 /* Models */ = {
+			isa = PBXGroup;
+			children = (C10000000000000000000008 /* TimeEntryRecord.swift */, C1000000000000000000000E /* Project.swift */, C1000000000000000000000F /* Tag.swift */, C10000000000000000000012 /* Entry.swift */,);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		E20000000000000000000009 /* Infrastructure */ = {
+			isa = PBXGroup;
+			children = (E20000000000000000000012 /* API */, E20000000000000000000010 /* Database */,);
+			path = Infrastructure;
+			sourceTree = "<group>";
+		};
+		E20000000000000000000010 /* Database */ = {
+			isa = PBXGroup;
+			children = (C10000000000000000000009 /* TimeEntryStore.swift */,);
+			path = Database;
+			sourceTree = "<group>";
+		};
+		E20000000000000000000011 /* Features */ = {
+			isa = PBXGroup;
+			children = (E20000000000000000000013 /* Auth */,);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		E20000000000000000000012 /* API */ = {
+			isa = PBXGroup;
+			children = (C1000000000000000000000A /* APIClient.swift */, C1000000000000000000000B /* AuthClient.swift */, C10000000000000000000010 /* ProjectClient.swift */, C10000000000000000000011 /* TagClient.swift */, C10000000000000000000013 /* EntryClient.swift */,);
+			path = API;
+			sourceTree = "<group>";
+		};
+		E20000000000000000000013 /* Auth */ = {
+			isa = PBXGroup;
+			children = (C1000000000000000000000C /* LoginView.swift */,);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A10000000000000000000001 /* ChronoMe */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E30000000000000000000001 /* Build configuration list for PBXNativeTarget "ChronoMe" */;
+			buildPhases = (A30000000000000000000001 /* Sources */, A20000000000000000000001 /* Frameworks */, A40000000000000000000001 /* Resources */);
+			buildRules = ();
+			dependencies = ();
+			name = ChronoMe;
+			packageProductDependencies = ();
+			productName = ChronoMe;
+			productReference = C10000000000000000000006 /* ChronoMe.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A10000000000000000000002 /* ChronoMeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E30000000000000000000002 /* Build configuration list for PBXNativeTarget "ChronoMeTests" */;
+			buildPhases = (A30000000000000000000002 /* Sources */, A20000000000000000000002 /* Frameworks */, A40000000000000000000002 /* Resources */);
+			buildRules = ();
+			dependencies = (D20000000000000000000001 /* PBXTargetDependency */,);
+			name = ChronoMeTests;
+			packageProductDependencies = ();
+			productName = ChronoMeTests;
+			productReference = C10000000000000000000007 /* ChronoMeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E10000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					A10000000000000000000001 = {CreatedOnToolsVersion = 26.0; };
+					A10000000000000000000002 = {CreatedOnToolsVersion = 26.0; TestTargetID = A10000000000000000000001; };
+				};
+			};
+			buildConfigurationList = E30000000000000000000003 /* Build configuration list for PBXProject "ChronoMe" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = ja;
+			hasScannedForEncodings = 0;
+			knownRegions = (ja, Base);
+			mainGroup = E20000000000000000000001;
+			packageReferences = ();
+			productRefGroup = E20000000000000000000007 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (A10000000000000000000001 /* ChronoMe */, A10000000000000000000002 /* ChronoMeTests */);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A40000000000000000000001 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (B10000000000000000000004 /* Assets.xcassets in Resources */,); runOnlyForDeploymentPostprocessing = 0; };
+		A40000000000000000000002 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A30000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10000000000000000000001 /* ChronoMeApp.swift in Sources */,
+				B10000000000000000000002 /* AppFeature.swift in Sources */,
+				B10000000000000000000003 /* ContentView.swift in Sources */,
+				B10000000000000000000008 /* TimeEntryRecord.swift in Sources */,
+				B10000000000000000000009 /* TimeEntryStore.swift in Sources */,
+				B1000000000000000000000A /* APIClient.swift in Sources */,
+				B1000000000000000000000B /* AuthClient.swift in Sources */,
+				B1000000000000000000000C /* LoginView.swift in Sources */,
+				B1000000000000000000000E /* Project.swift in Sources */,
+				B1000000000000000000000F /* Tag.swift in Sources */,
+				B10000000000000000000010 /* ProjectClient.swift in Sources */,
+				B10000000000000000000011 /* TagClient.swift in Sources */,
+				B10000000000000000000012 /* Entry.swift in Sources */,
+				B10000000000000000000013 /* EntryClient.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A30000000000000000000002 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (B10000000000000000000005 /* AppFeatureTests.swift in Sources */, B1000000000000000000000D /* APIClientTests.swift in Sources */,); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D20000000000000000000001 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = A10000000000000000000001 /* ChronoMe */; targetProxy = D10000000000000000000001 /* PBXContainerItemProxy */; };
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		E40000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = ChronoMe;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.chronome.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E40000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = ChronoMe;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.chronome.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E40000000000000000000003 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; PRODUCT_BUNDLE_IDENTIFIER = com.chronome.app.tests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ChronoMe.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ChronoMe"; }; name = Debug; };
+		E40000000000000000000004 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; PRODUCT_BUNDLE_IDENTIFIER = com.chronome.app.tests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ChronoMe.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ChronoMe"; }; name = Release; };
+		E40000000000000000000005 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = dwarf; ENABLE_TESTABILITY = YES; GCC_C_LANGUAGE_STANDARD = gnu17; GCC_OPTIMIZATION_LEVEL = 0; MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE; ONLY_ACTIVE_ARCH = YES; SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)"; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; }; name = Debug; };
+		E40000000000000000000006 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; ENABLE_NS_ASSERTIONS = NO; GCC_C_LANGUAGE_STANDARD = gnu17; MTL_ENABLE_DEBUG_INFO = NO; SWIFT_COMPILATION_MODE = wholemodule; SWIFT_OPTIMIZATION_LEVEL = "-O"; VALIDATE_PRODUCT = YES; }; name = Release; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E30000000000000000000001 /* Build configuration list for PBXNativeTarget "ChronoMe" */ = {isa = XCConfigurationList; buildConfigurations = (E40000000000000000000001 /* Debug */, E40000000000000000000002 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		E30000000000000000000002 /* Build configuration list for PBXNativeTarget "ChronoMeTests" */ = {isa = XCConfigurationList; buildConfigurations = (E40000000000000000000003 /* Debug */, E40000000000000000000004 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		E30000000000000000000003 /* Build configuration list for PBXProject "ChronoMe" */ = {isa = XCConfigurationList; buildConfigurations = (E40000000000000000000005 /* Debug */, E40000000000000000000006 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+
+	};
+	rootObject = E10000000000000000000001 /* Project object */;
+}

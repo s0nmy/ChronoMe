@@ -8,3 +8,8 @@
 # Logs / temporary files
 *.log
 tmp/
+ios/DerivedData/
+ios/SourcePackages/
+ios/*.xcworkspace/xcuserdata/
+ios/*.xcodeproj/xcuserdata/
+*.xcuserstate

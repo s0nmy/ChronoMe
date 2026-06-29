@@ -34,11 +34,11 @@ gantt
 
 #### 1. プロジェクト初期化
 
-- [ ] Xcodeプロジェクト作成（iOS 17.0以上）
-- [ ] Swift Package Managerのセットアップ
-- [ ] TCA依存関係の追加
-- [ ] .gitignore設定
-- [ ] ディレクトリ構造の作成
+- [x] Xcodeプロジェクト作成（iOS 17.0以上）
+- [ ] Swift Package Managerのセットアップ（外部依存が必要になった時点で再開）
+- [ ] TCA依存関係の追加（Xcode 26.0.1環境でビルド不安定のため保留）
+- [x] .gitignore設定
+- [x] ディレクトリ構造の作成
 
 #### 2. CI/CD環境構築
 
@@ -49,9 +49,9 @@ gantt
 
 #### 3. 技術検証（PoC）
 
-- [ ] TCAの基本的な実装パターン確認
-- [ ] SwiftDataのCRUD操作確認
-- [ ] URLSessionでのAPI通信テスト
+- [ ] TCAの基本的な実装パターン確認（Xcode 26.0.1環境で保留）
+- [x] SwiftDataのCRUD操作確認
+- [x] URLSessionでのAPI通信テスト
 - [ ] Keychainへのトークン保存テスト
 - [ ] バックグラウンドタイマー動作確認
 
@@ -80,50 +80,54 @@ gantt
 
 #### 認証機能
 
-- [ ] ログイン画面（AuthFeature）
+- [x] ログイン画面（AuthFeature）
   - メールアドレス/パスワード入力
-  - バリデーション
+  - 最小バリデーション
   - エラーハンドリング
-- [ ] サインアップ画面
-- [ ] ログアウト機能
-- [ ] Keychainへの認証トークン保存
-- [ ] 自動ログイン
+- [x] サインアップ画面
+- [x] ログアウト機能
+- [ ] Keychainへの認証トークン保存（現状はCookieセッション中心）
+- [x] 自動ログイン
 
 #### タイムエントリ機能
 
 - [ ] タイムエントリ一覧画面（TimeEntryFeature）
-  - エントリリスト表示
-  - 日付フィルター
-  - スワイプで削除
+  - [x] エントリリスト表示
+  - [x] 日付フィルター
+  - [x] スワイプで削除
   - プルトゥリフレッシュ
 - [ ] タイムエントリ作成画面
   - 開始時刻/終了時刻選択
   - プロジェクト選択
   - タグ選択
   - メモ入力
-- [ ] タイムエントリ編集画面
+- [x] タイムエントリ編集画面
 - [ ] タイマー機能
   - 作業開始/終了ボタン
-  - バックグラウンド動作
-  - タイマー実行中のインジケーター
+  - [ ] バックグラウンド動作
+  - [x] タイマー実行中のインジケーター
+  - [x] プロジェクト選択
+  - [x] タグ選択
+  - [x] メモ入力
 
 #### プロジェクト管理
 
 - [ ] プロジェクト一覧画面（ProjectFeature）
-- [ ] プロジェクト作成/編集
-- [ ] プロジェクトカラー選択
+- [x] プロジェクト作成/編集
+- [x] プロジェクトカラー選択
 
 #### タグ管理
 
 - [ ] タグ一覧画面（TagFeature）
-- [ ] タグ作成/編集
-- [ ] タグカラー選択
+- [x] タグ作成/編集
+- [x] タグカラー選択
 
 #### レポート機能（基本）
 
-- [ ] 日次サマリー表示（ReportFeature）
-  - 合計作業時間
-  - プロジェクト別内訳
+- [x] 日次サマリー表示（ReportFeature）
+  - [x] 合計作業時間
+  - [x] プロジェクト別内訳
+  - [x] タグ別内訳
 - [ ] 週次サマリー表示
 - [ ] 棒グラフ表示（Swift Charts）
 
@@ -135,23 +139,30 @@ gantt
   - Tag
   - User
 - [ ] オフライン対応
-  - ローカルDB保存
-  - 同期キュー実装
-  - オンライン時の自動同期
+  - [x] ローカルDB保存
+  - [x] 同期キュー実装（未同期エントリの再送）
+  - [x] オンライン時の自動同期（ログイン/復元/手動更新時）
 
 #### API統合
 
-- [ ] APIClient実装（URLSession）
-  - GET /api/entries
-  - POST /api/entries
-  - PUT /api/entries/:id
-  - DELETE /api/entries/:id
-  - GET /api/projects
-  - POST /api/projects
-  - GET /api/tags
-  - POST /api/tags
+- [x] APIClient実装（URLSession）
+  - POST /api/auth/login
+  - POST /api/auth/signup
+  - GET /api/auth/me
+  - POST /api/auth/logout
+- [ ] TimeEntry / Project / Tag API実装
+  - [x] GET /api/entries
+  - [x] POST /api/entries
+  - [x] PATCH /api/entries/:id
+  - [x] DELETE /api/entries/:id
+  - [x] GET /api/projects
+  - [x] POST /api/projects
+  - [x] PATCH /api/projects/:id
+  - [x] GET /api/tags
+  - [x] POST /api/tags
+  - [x] PATCH /api/tags/:id
 - [ ] エラーハンドリング
-- [ ] リトライロジック
+- [x] リトライロジック（未同期エントリの手動/自動再同期）
 
 #### ウィジェット（基本）
 
