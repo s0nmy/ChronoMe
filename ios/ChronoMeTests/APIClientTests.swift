@@ -3,7 +3,7 @@ import XCTest
 @testable import ChronoMe
 
 final class APIClientTests: XCTestCase {
-    func mutatingRequestAddsCSRFHeaderFromCookieStorage() async throws {
+    func testMutatingRequestAddsCSRFHeaderFromCookieStorage() async throws {
         let baseURL = URL(string: "https://example.com")!
         let cookieStorage = HTTPCookieStorage()
         cookieStorage.setCookie(HTTPCookie(
@@ -29,7 +29,7 @@ final class APIClientTests: XCTestCase {
         XCTAssertEqual(session.lastRequest?.value(forHTTPHeaderField: "X-CSRF-Token"), "csrf-token")
     }
 
-    func currentUserReturnsNilForUnauthorizedResponse() async throws {
+    func testCurrentUserReturnsNilForUnauthorizedResponse() async throws {
         let baseURL = URL(string: "https://example.com")!
         let session = MockURLSession(
             data: #"{"error":"unauthorized"}"#.data(using: .utf8)!,
@@ -44,7 +44,7 @@ final class APIClientTests: XCTestCase {
         XCTAssertNil(user)
     }
 
-    func mutatingRequestWithoutCSRFTokenFailsBeforeNetworkRequest() async throws {
+    func testMutatingRequestWithoutCSRFTokenFailsBeforeNetworkRequest() async throws {
         let baseURL = URL(string: "https://example.com")!
         let session = MockURLSession(data: Data(), statusCode: 204, url: baseURL)
         let apiClient = APIClient(baseURL: baseURL, session: session, cookieStorage: HTTPCookieStorage())
@@ -59,7 +59,7 @@ final class APIClientTests: XCTestCase {
         }
     }
 
-    func projectClientDecodesProjects() async throws {
+    func testProjectClientDecodesProjects() async throws {
         let baseURL = URL(string: "https://example.com")!
         let session = MockURLSession(
             data: """
@@ -93,7 +93,7 @@ final class APIClientTests: XCTestCase {
         XCTAssertEqual(session.lastRequest?.url?.path, "/api/projects/")
     }
 
-    func tagClientDecodesTags() async throws {
+    func testTagClientDecodesTags() async throws {
         let baseURL = URL(string: "https://example.com")!
         let session = MockURLSession(
             data: """
@@ -125,7 +125,7 @@ final class APIClientTests: XCTestCase {
         XCTAssertEqual(session.lastRequest?.url?.path, "/api/tags/")
     }
 
-    func projectClientCreatesProjectWithCSRFHeader() async throws {
+    func testProjectClientCreatesProjectWithCSRFHeader() async throws {
         let baseURL = URL(string: "https://example.com")!
         let cookieStorage = csrfCookieStorage(for: baseURL)
         let session = MockURLSession(
@@ -158,7 +158,7 @@ final class APIClientTests: XCTestCase {
         XCTAssertEqual(payload?["color"] as? String, "#3B82F6")
     }
 
-    func tagClientUpdatesTagWithCSRFHeader() async throws {
+    func testTagClientUpdatesTagWithCSRFHeader() async throws {
         let baseURL = URL(string: "https://example.com")!
         let cookieStorage = csrfCookieStorage(for: baseURL)
         let session = MockURLSession(
@@ -189,7 +189,7 @@ final class APIClientTests: XCTestCase {
         XCTAssertEqual(payload?["color"] as? String, "#22C55E")
     }
 
-    func entryClientCreatesEntryWithSnakeCasePayloadAndCSRFHeader() async throws {
+    func testEntryClientCreatesEntryWithSnakeCasePayloadAndCSRFHeader() async throws {
         let baseURL = URL(string: "https://example.com")!
         let cookieStorage = HTTPCookieStorage()
         cookieStorage.setCookie(HTTPCookie(
@@ -251,7 +251,7 @@ final class APIClientTests: XCTestCase {
         XCTAssertNotNil(payload?["ended_at"] as? String)
     }
 
-    func entryClientListsEntriesWithDateRangeQuery() async throws {
+    func testEntryClientListsEntriesWithDateRangeQuery() async throws {
         let baseURL = URL(string: "https://example.com")!
         let session = MockURLSession(
             data: """
@@ -292,7 +292,7 @@ final class APIClientTests: XCTestCase {
         XCTAssertNotNil(URLComponents(url: try XCTUnwrap(session.lastRequest?.url), resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "to" })
     }
 
-    func entryClientUpdatesEntryWithSnakeCasePayload() async throws {
+    func testEntryClientUpdatesEntryWithSnakeCasePayload() async throws {
         let baseURL = URL(string: "https://example.com")!
         let cookieStorage = HTTPCookieStorage()
         cookieStorage.setCookie(HTTPCookie(
@@ -340,7 +340,7 @@ final class APIClientTests: XCTestCase {
         XCTAssertEqual(payload?["tag_ids"] as? [String], ["tag-1"])
     }
 
-    func entryClientDeletesEntryWithCSRFHeader() async throws {
+    func testEntryClientDeletesEntryWithCSRFHeader() async throws {
         let baseURL = URL(string: "https://example.com")!
         let cookieStorage = HTTPCookieStorage()
         cookieStorage.setCookie(HTTPCookie(

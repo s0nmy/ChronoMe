@@ -4,7 +4,7 @@ import XCTest
 
 @MainActor
 final class AppFeatureTests: XCTestCase {
-    func timerStartsTicksAndStops() async throws {
+    func testTimerStartsTicksAndStops() async throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
             for: TimeEntryRecord.self,
@@ -33,7 +33,7 @@ final class AppFeatureTests: XCTestCase {
         XCTAssertEqual(feature.recentEntries.first?.syncStatus, "synced")
     }
 
-    func recentEntriesAreSortedNewestFirst() throws {
+    func testRecentEntriesAreSortedNewestFirst() throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
             for: TimeEntryRecord.self,
@@ -49,7 +49,7 @@ final class AppFeatureTests: XCTestCase {
         XCTAssertEqual(entries.map(\.durationSeconds), [60, 120])
     }
 
-    func unsyncedEntriesExcludeSyncedEntries() throws {
+    func testUnsyncedEntriesExcludeSyncedEntries() throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
             for: TimeEntryRecord.self,
@@ -66,7 +66,7 @@ final class AppFeatureTests: XCTestCase {
         XCTAssertEqual(unsynced.map(\.title), ["Pending"])
     }
 
-    func entriesCanBeFetchedByDateRange() throws {
+    func testEntriesCanBeFetchedByDateRange() throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
             for: TimeEntryRecord.self,
@@ -85,7 +85,7 @@ final class AppFeatureTests: XCTestCase {
         XCTAssertEqual(entries.map(\.title), ["Target"])
     }
 
-    func upsertRemoteEntryDoesNotDuplicateExistingRemoteEntry() throws {
+    func testUpsertRemoteEntryDoesNotDuplicateExistingRemoteEntry() throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
             for: TimeEntryRecord.self,
@@ -115,7 +115,7 @@ final class AppFeatureTests: XCTestCase {
         XCTAssertEqual(try store.fetchRecent(limit: 20).count, 1)
     }
 
-    func localEntryCanBeUpdatedAndDeleted() throws {
+    func testLocalEntryCanBeUpdatedAndDeleted() throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
             for: TimeEntryRecord.self,
@@ -139,7 +139,7 @@ final class AppFeatureTests: XCTestCase {
         XCTAssertTrue(try store.fetchRecent(limit: 20).isEmpty)
     }
 
-    func selectedDateSummaryAggregatesProjectsAndTags() throws {
+    func testSelectedDateSummaryAggregatesProjectsAndTags() throws {
         let project = Project(id: "project-1", userId: "user-1", name: "Client A", description: nil, color: "#3B82F6", isArchived: false, createdAt: nil, updatedAt: nil)
         let tag = Tag(id: "tag-1", userId: "user-1", name: "Deep Work", color: "#F97316", createdAt: nil, updatedAt: nil)
         let now = Date()
@@ -187,7 +187,7 @@ final class AppFeatureTests: XCTestCase {
         XCTAssertEqual(feature.selectedDateTagSummaries.map(\.name), ["Deep Work", "タグなし"])
     }
 
-    func restoreSessionSignsInWhenUserExists() async throws {
+    func testRestoreSessionSignsInWhenUserExists() async throws {
         let feature = AppFeature(
             entryStore: MockTimeEntryStore(),
             authClient: MockAuthClient(currentUserResult: AuthUser(
@@ -225,7 +225,7 @@ final class AppFeatureTests: XCTestCase {
         XCTAssertEqual(feature.tags.map(\.name), ["Deep Work"])
     }
 
-    func loginSignsIn() async throws {
+    func testLoginSignsIn() async throws {
         let feature = AppFeature(
             entryStore: MockTimeEntryStore(),
             authClient: MockAuthClient(loginResult: AuthUser(
@@ -260,7 +260,7 @@ final class AppFeatureTests: XCTestCase {
         XCTAssertEqual(feature.tags.count, 1)
     }
 
-    func logoutClearsWorkspaceData() async throws {
+    func testLogoutClearsWorkspaceData() async throws {
         let feature = AppFeature(
             entryStore: MockTimeEntryStore(),
             authClient: MockAuthClient(),
