@@ -280,7 +280,7 @@ private struct TimerHomeView: View {
                     } label: {
                         HStack {
                             Circle()
-                                .fill(color(from: tag.color))
+                                .fill(Color(hex: tag.color))
                                 .frame(width: 10, height: 10)
                             Text(tag.name)
                             Spacer()
@@ -371,7 +371,7 @@ private struct TimerHomeView: View {
                     } label: {
                         HStack(spacing: 12) {
                             Circle()
-                                .fill(color(from: project.color))
+                                .fill(Color(hex: project.color))
                                 .frame(width: 12, height: 12)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(project.name)
@@ -410,7 +410,7 @@ private struct TimerHomeView: View {
                     } label: {
                         HStack(spacing: 10) {
                             Circle()
-                                .fill(color(from: tag.color))
+                                .fill(Color(hex: tag.color))
                                 .frame(width: 10, height: 10)
                             Text(tag.name)
                         }
@@ -504,22 +504,6 @@ private struct TimerHomeView: View {
         let seconds = elapsedSeconds % 60
         return "\(hours)時間\(minutes)分\(seconds)秒"
     }
-
-    private func color(from hex: String) -> Color {
-        var value = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        if value.hasPrefix("#") {
-            value.removeFirst()
-        }
-
-        guard value.count == 6, let integer = UInt64(value, radix: 16) else {
-            return Color.accentColor
-        }
-
-        let red = Double((integer >> 16) & 0xFF) / 255
-        let green = Double((integer >> 8) & 0xFF) / 255
-        let blue = Double(integer & 0xFF) / 255
-        return Color(red: red, green: green, blue: blue)
-    }
 }
 
 private struct FlowTagList: View {
@@ -530,7 +514,7 @@ private struct FlowTagList: View {
             ForEach(tags) { tag in
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(color(from: tag.color))
+                        .fill(Color(hex: tag.color))
                         .frame(width: 8, height: 8)
                     Text(tag.name)
                         .lineLimit(1)
@@ -541,22 +525,6 @@ private struct FlowTagList: View {
                 .background(.thinMaterial, in: Capsule())
             }
         }
-    }
-
-    private func color(from hex: String) -> Color {
-        var value = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        if value.hasPrefix("#") {
-            value.removeFirst()
-        }
-
-        guard value.count == 6, let integer = UInt64(value, radix: 16) else {
-            return Color.accentColor
-        }
-
-        let red = Double((integer >> 16) & 0xFF) / 255
-        let green = Double((integer >> 8) & 0xFF) / 255
-        let blue = Double(integer & 0xFF) / 255
-        return Color(red: red, green: green, blue: blue)
     }
 }
 
@@ -569,7 +537,7 @@ private struct SummaryBarView: View {
             HStack {
                 HStack(spacing: 8) {
                     Circle()
-                        .fill(color(from: item.color))
+                        .fill(Color(hex: item.color))
                         .frame(width: 10, height: 10)
                     Text(item.name)
                         .lineLimit(1)
@@ -586,28 +554,12 @@ private struct SummaryBarView: View {
                     Capsule()
                         .fill(.quaternary)
                     Capsule()
-                        .fill(color(from: item.color))
+                        .fill(Color(hex: item.color))
                         .frame(width: max(4, proxy.size.width * item.ratio))
                 }
             }
             .frame(height: 8)
         }
-    }
-
-    private func color(from hex: String) -> Color {
-        var value = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        if value.hasPrefix("#") {
-            value.removeFirst()
-        }
-
-        guard value.count == 6, let integer = UInt64(value, radix: 16) else {
-            return Color.accentColor
-        }
-
-        let red = Double((integer >> 16) & 0xFF) / 255
-        let green = Double((integer >> 8) & 0xFF) / 255
-        let blue = Double(integer & 0xFF) / 255
-        return Color(red: red, green: green, blue: blue)
     }
 }
 
@@ -644,7 +596,7 @@ private struct EntryEditView: View {
                             } label: {
                                 HStack {
                                     Circle()
-                                        .fill(color(from: tag.color))
+                                        .fill(Color(hex: tag.color))
                                         .frame(width: 10, height: 10)
                                     Text(tag.name)
                                     Spacer()
@@ -689,21 +641,24 @@ private struct EntryEditView: View {
             }
         }
     }
+}
 
-    private func color(from hex: String) -> Color {
+private extension Color {
+    init(hex: String) {
         var value = hex.trimmingCharacters(in: .whitespacesAndNewlines)
         if value.hasPrefix("#") {
             value.removeFirst()
         }
 
         guard value.count == 6, let integer = UInt64(value, radix: 16) else {
-            return Color.accentColor
+            self = .accentColor
+            return
         }
 
         let red = Double((integer >> 16) & 0xFF) / 255
         let green = Double((integer >> 8) & 0xFF) / 255
         let blue = Double(integer & 0xFF) / 255
-        return Color(red: red, green: green, blue: blue)
+        self.init(red: red, green: green, blue: blue)
     }
 }
 
