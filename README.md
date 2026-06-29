@@ -8,6 +8,7 @@ Go 製バックエンドと React + TypeScript フロントエンドで構成し
 - フロントエンド: React + TypeScript (Vite)
 - バックエンド: Go
 - Allocation API: Go バックエンド内の `/api/allocations`
+- iOS: SwiftUI（iOS 17以上）
 
 ## 使い方
 
@@ -21,6 +22,12 @@ make dev
 make backend  # or make b
 make frontend # or make f
 ```
+
+### iOS
+
+[`ios/ChronoMe.xcodeproj`](ios/ChronoMe.xcodeproj) を Xcode で開き、`ChronoMe`
+scheme と iPhone Simulator を選択して実行します。初回は Swift Package Manager
+による依存関係の解決が行われます。
 
 ## ドキュメント
 

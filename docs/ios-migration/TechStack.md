@@ -158,7 +158,7 @@ dependencies: [
 
 ## 開発ツール
 
-### Xcode 15以上
+### Xcode 26以上
 
 - **理由**: 最新のSwift・SwiftUIサポート
 
