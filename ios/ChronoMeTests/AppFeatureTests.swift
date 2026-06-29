@@ -326,7 +326,7 @@ final class AppFeatureTests: XCTestCase {
     ) async throws {
         let deadline = Date().addingTimeInterval(timeout)
         while feature.recentEntries.isEmpty && Date() < deadline {
-            try await Task.sleep(for: .milliseconds(10))
+            await Task.yield()
         }
 
         XCTAssertFalse(feature.recentEntries.isEmpty, file: file, line: line)
