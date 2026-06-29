@@ -11,8 +11,8 @@
 2. Select the `ChronoMe` scheme and an iPhone simulator.
 3. Press Run (`Command-R`).
 
-The initial runnable target uses only Apple frameworks, so no dependency
-resolution is required.
+The initial runnable target currently uses only Apple frameworks, so no dependency
+resolution is required (Swift Package Manager is not used yet).
 
 The app currently skips authentication for local iOS verification and opens the
 home screen as a local development user. Auth screens and API clients remain in

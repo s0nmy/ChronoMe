@@ -14,6 +14,11 @@ struct ChronoMeApp: App {
             let projectClient = ProjectClient(apiClient: apiClient)
             let tagClient = TagClient(apiClient: apiClient)
             let entryClient = EntryClient(apiClient: apiClient)
+#if DEBUG
+            let skipsAuthentication = true
+#else
+            let skipsAuthentication = false
+#endif
             modelContainer = container
             _feature = StateObject(
                 wrappedValue: AppFeature(
@@ -22,7 +27,7 @@ struct ChronoMeApp: App {
                     projectClient: projectClient,
                     tagClient: tagClient,
                     entryClient: entryClient,
-                    skipsAuthentication: true
+                    skipsAuthentication: skipsAuthentication
                 )
             )
         } catch {

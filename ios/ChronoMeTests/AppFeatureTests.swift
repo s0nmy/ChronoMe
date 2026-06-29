@@ -26,7 +26,7 @@ final class AppFeatureTests: XCTestCase {
         XCTAssertEqual(feature.elapsedSeconds, 1)
 
         feature.timerButtonTapped()
-        try await Task.sleep(for: .milliseconds(100))
+        try await waitForRecentEntries(in: feature)
         XCTAssertFalse(feature.isTimerRunning)
         XCTAssertEqual(feature.recentEntries.count, 1)
         XCTAssertEqual(feature.recentEntries.first?.durationSeconds, 1)
@@ -208,7 +208,7 @@ final class AppFeatureTests: XCTestCase {
         )
 
         feature.restoreSession()
-        try await Task.sleep(for: .milliseconds(100))
+        try await waitForAuthRequestToFinish(in: feature)
 
         XCTAssertEqual(
             feature.authState,
@@ -245,17 +245,19 @@ final class AppFeatureTests: XCTestCase {
             entryClient: MockEntryClient()
         )
 
-        feature.loginButtonTapped(email: "miyu@example.com", password: "Password1")
-        try await Task.sleep(for: .milliseconds(100))
-
-        XCTAssertEqual(feature.authState, .signedIn(AuthUser(
+        let expectedUser = AuthUser(
             id: "user-1",
             email: "miyu@example.com",
             displayName: nil,
             timeZone: "Asia/Tokyo",
             createdAt: nil,
             updatedAt: nil
-        )))
+        )
+
+        feature.loginButtonTapped(email: "miyu@example.com", password: "Password1")
+        try await waitForAuthState(.signedIn(expectedUser), in: feature)
+
+        XCTAssertEqual(feature.authState, .signedIn(expectedUser))
         XCTAssertEqual(feature.projects.count, 1)
         XCTAssertEqual(feature.tags.count, 1)
     }
@@ -274,15 +276,60 @@ final class AppFeatureTests: XCTestCase {
         )
 
         feature.loginButtonTapped(email: "miyu@example.com", password: "Password1")
-        try await Task.sleep(for: .milliseconds(100))
+        try await waitForAuthRequestToFinish(in: feature)
         XCTAssertEqual(feature.projects.count, 1)
 
         feature.logoutButtonTapped()
-        try await Task.sleep(for: .milliseconds(100))
+        try await waitForAuthState(.signedOut, in: feature)
 
         XCTAssertEqual(feature.authState, .signedOut)
         XCTAssertTrue(feature.projects.isEmpty)
         XCTAssertTrue(feature.tags.isEmpty)
+    }
+
+    private func waitForAuthRequestToFinish(
+        in feature: AppFeature,
+        timeout: TimeInterval = 1,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) async throws {
+        let deadline = Date().addingTimeInterval(timeout)
+        while (feature.isAuthRequestInFlight || feature.authState == .checking), Date() < deadline {
+            await Task.yield()
+        }
+
+        XCTAssertFalse(feature.isAuthRequestInFlight, file: file, line: line)
+        XCTAssertNotEqual(feature.authState, .checking, file: file, line: line)
+    }
+
+    private func waitForAuthState(
+        _ expectedState: AppFeature.AuthState,
+        in feature: AppFeature,
+        timeout: TimeInterval = 1,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) async throws {
+        let deadline = Date().addingTimeInterval(timeout)
+        while (feature.isAuthRequestInFlight || feature.authState != expectedState), Date() < deadline {
+            await Task.yield()
+        }
+
+        XCTAssertFalse(feature.isAuthRequestInFlight, file: file, line: line)
+        XCTAssertEqual(feature.authState, expectedState, file: file, line: line)
+    }
+
+    private func waitForRecentEntries(
+        in feature: AppFeature,
+        timeout: TimeInterval = 1,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) async throws {
+        let deadline = Date().addingTimeInterval(timeout)
+        while feature.recentEntries.isEmpty && Date() < deadline {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+
+        XCTAssertFalse(feature.recentEntries.isEmpty, file: file, line: line)
     }
 }
 

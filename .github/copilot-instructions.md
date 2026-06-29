@@ -1,4 +1,4 @@
-****# GitHub Copilot Review Guidelines
+# GitHub Copilot Review Guidelines
 
 このドキュメントは、GitHub Copilotを使用してプルリクエスト（PR）レビューを行う際のガイドラインです。
 
