@@ -42,16 +42,11 @@ final class AppFeature: ObservableObject {
 
     @Published private(set) var authState: AuthState = .checking
     @Published private(set) var isAuthRequestInFlight = false
-    @Published private(set) var elapsedSeconds = 0
-    @Published private(set) var isTimerRunning = false
     @Published private(set) var recentEntries: [TimeEntryRecord] = []
     @Published private(set) var selectedDateEntries: [TimeEntryRecord] = []
     @Published private(set) var selectedEntryDate = Date()
     @Published private(set) var projects: [Project] = []
     @Published private(set) var tags: [Tag] = []
-    @Published private(set) var selectedProjectID: String?
-    @Published private(set) var selectedTagIDs: Set<String> = []
-    @Published private(set) var draftNotes = ""
     @Published private(set) var isLoadingWorkspaceData = false
     @Published private(set) var isSyncingEntries = false
     @Published var entryEditDraft: EntryEditDraft?
@@ -59,8 +54,9 @@ final class AppFeature: ObservableObject {
     @Published var tagEditDraft: TagEditDraft?
     @Published private(set) var errorMessage: String?
 
-    private var timer: Timer?
-    private var startedAt: Date?
+    // 複数タイマー管理用
+    @Published private(set) var timerSessions: [TimerSession] = []
+    private var sessionTimer: Timer?
     private let entryStore: TimeEntryStoring
     private let authClient: AuthClientProtocol
     private let projectClient: ProjectClientProtocol
@@ -225,9 +221,9 @@ final class AppFeature: ObservableObject {
                 authState = .signedOut
                 projects = []
                 tags = []
-                selectedProjectID = nil
-                selectedTagIDs = []
-                draftNotes = ""
+                timerSessions = []
+                sessionTimer?.invalidate()
+                sessionTimer = nil
                 errorMessage = nil
             } catch {
                 errorMessage = "ログアウトできませんでした。"
@@ -254,22 +250,6 @@ final class AppFeature: ObservableObject {
         Task {
             await syncEntries(for: date)
         }
-    }
-
-    func projectSelectionChanged(_ projectID: String?) {
-        selectedProjectID = projectID
-    }
-
-    func tagSelectionToggled(_ tagID: String) {
-        if selectedTagIDs.contains(tagID) {
-            selectedTagIDs.remove(tagID)
-        } else {
-            selectedTagIDs.insert(tagID)
-        }
-    }
-
-    func draftNotesChanged(_ notes: String) {
-        draftNotes = notes
     }
 
     func entryTapped(_ entry: TimeEntryRecord) {
@@ -395,28 +375,140 @@ final class AppFeature: ObservableObject {
         }
     }
 
-    func timerButtonTapped() {
-        isTimerRunning.toggle()
+    // MARK: - 複数タイマー管理
 
-        if isTimerRunning {
-            elapsedSeconds = 0
-            startedAt = Date()
-            timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-                Task { @MainActor in
-                    self?.timerTicked()
-                }
-            }
-        } else {
-            timer?.invalidate()
-            timer = nil
-            Task {
-                await saveCurrentEntry()
+    func startTimerSession(projectID: String?, notes: String, tagIDs: Set<String>) {
+        let session = TimerSession(
+            projectID: projectID,
+            notes: notes,
+            tagIDs: tagIDs,
+            isBreak: false,
+            startedAt: Date()
+        )
+        timerSessions.append(session)
+        startSessionTimer()
+    }
+
+    func pauseTimerSession(_ sessionID: UUID) {
+        guard let index = timerSessions.firstIndex(where: { $0.id == sessionID }) else { return }
+        var session = timerSessions[index]
+
+        if !session.isPaused {
+            session.lastPausedAt = Date()
+            timerSessions[index] = session
+        }
+    }
+
+    func resumeTimerSession(_ sessionID: UUID) {
+        guard let index = timerSessions.firstIndex(where: { $0.id == sessionID }) else { return }
+        var session = timerSessions[index]
+
+        if let pausedAt = session.lastPausedAt {
+            let pauseDuration = Int(Date().timeIntervalSince(pausedAt))
+            session.pausedDurationSeconds += pauseDuration
+            session.lastPausedAt = nil
+            timerSessions[index] = session
+        }
+    }
+
+    func stopTimerSession(_ sessionID: UUID) {
+        guard let index = timerSessions.firstIndex(where: { $0.id == sessionID }) else { return }
+        let session = timerSessions[index]
+
+        Task {
+            await saveTimerSession(session)
+            timerSessions.remove(at: index)
+
+            if timerSessions.isEmpty {
+                stopSessionTimer()
             }
         }
     }
 
-    func timerTicked() {
-        elapsedSeconds += 1
+    func updateTimerSession(_ sessionID: UUID, notes: String?, tagIDs: Set<String>?, isBreak: Bool?) {
+        guard let index = timerSessions.firstIndex(where: { $0.id == sessionID }) else { return }
+        var session = timerSessions[index]
+
+        if let notes { session.notes = notes }
+        if let tagIDs { session.tagIDs = tagIDs }
+        if let isBreak { session.isBreak = isBreak }
+
+        timerSessions[index] = session
+    }
+
+    private func startSessionTimer() {
+        guard sessionTimer == nil else { return }
+
+        sessionTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.sessionTimerTicked()
+            }
+        }
+    }
+
+    private func stopSessionTimer() {
+        sessionTimer?.invalidate()
+        sessionTimer = nil
+    }
+
+    private func sessionTimerTicked() {
+        // 配列の再代入で@Publishedの変更通知をトリガー
+        timerSessions = timerSessions
+    }
+
+    private func saveTimerSession(_ session: TimerSession) async {
+        let endedAt = Date()
+        let durationSeconds = session.currentElapsedSeconds()
+        let project = projects.first { $0.id == session.projectID }
+        let selectedTags = tags.filter { session.tagIDs.contains($0.id) }
+        let title = project?.name ?? "作業"
+        let notes = session.notes.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        do {
+            let localEntry = try entryStore.save(
+                title: title,
+                notes: notes,
+                project: project,
+                tags: selectedTags,
+                startedAt: session.startedAt,
+                endedAt: endedAt,
+                durationSeconds: durationSeconds,
+                remoteEntryID: nil,
+                syncStatus: "pending"
+            )
+            loadRecentEntries()
+            loadSelectedDateEntries()
+
+            if skipsAuthentication {
+                try entryStore.markSynced(localEntry, remoteEntryID: localEntry.id.uuidString)
+                loadRecentEntries()
+                loadSelectedDateEntries()
+                errorMessage = nil
+                return
+            }
+
+            do {
+                let remoteEntry = try await entryClient.createEntry(
+                    title: title,
+                    notes: notes,
+                    projectId: project?.id,
+                    startedAt: session.startedAt,
+                    endedAt: endedAt,
+                    isBreak: session.isBreak,
+                    tagIds: selectedTags.map(\.id)
+                )
+                try entryStore.markSynced(localEntry, remoteEntryID: remoteEntry.id)
+                loadRecentEntries()
+                loadSelectedDateEntries()
+            } catch {
+                try? entryStore.markSyncFailed(localEntry)
+                loadRecentEntries()
+                loadSelectedDateEntries()
+                errorMessage = "作業記録をローカル保存しましたが、同期に失敗しました。"
+            }
+        } catch {
+            errorMessage = "作業記録を保存できませんでした。"
+        }
     }
 
     func loadRecentEntries() {
@@ -470,10 +562,6 @@ final class AppFeature: ObservableObject {
             async let tags = tagClient.listTags()
             self.projects = try await projects
             self.tags = try await tags
-            if let selectedProjectID, !self.projects.contains(where: { $0.id == selectedProjectID }) {
-                self.selectedProjectID = nil
-            }
-            selectedTagIDs = selectedTagIDs.intersection(Set(self.tags.map(\.id)))
             errorMessage = nil
         } catch {
             errorMessage = "プロジェクトとタグを読み込めませんでした。"
@@ -648,9 +736,6 @@ final class AppFeature: ObservableObject {
                     if let index = projects.firstIndex(where: { $0.id == updated.id }) {
                         projects[index] = updated
                     }
-                    if selectedProjectID == updated.id, updated.isArchived {
-                        selectedProjectID = nil
-                    }
                 } else {
                     let created = Project(
                         id: UUID().uuidString,
@@ -664,7 +749,6 @@ final class AppFeature: ObservableObject {
                     )
                     try workspaceStore?.saveProject(created)
                     projects.insert(created, at: 0)
-                    selectedProjectID = created.id
                 }
                 projectEditDraft = nil
                 errorMessage = nil
@@ -732,7 +816,6 @@ final class AppFeature: ObservableObject {
                     )
                     try workspaceStore?.saveTag(created)
                     tags.insert(created, at: 0)
-                    selectedTagIDs.insert(created.id)
                 }
                 tagEditDraft = nil
                 errorMessage = nil
@@ -803,65 +886,8 @@ final class AppFeature: ObservableObject {
         return (start, end)
     }
 
-    private func saveCurrentEntry() async {
-        guard let startedAt else { return }
-        let endedAt = Date()
-        let project = projects.first { $0.id == selectedProjectID }
-        let selectedTags = tags.filter { selectedTagIDs.contains($0.id) }
-        let title = project?.name ?? "作業"
-        let notes = draftNotes.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        do {
-            let localEntry = try entryStore.save(
-                title: title,
-                notes: notes,
-                project: project,
-                tags: selectedTags,
-                startedAt: startedAt,
-                endedAt: endedAt,
-                durationSeconds: elapsedSeconds,
-                remoteEntryID: nil,
-                syncStatus: "pending"
-            )
-            self.startedAt = nil
-            draftNotes = ""
-            loadRecentEntries()
-            loadSelectedDateEntries()
-
-            if skipsAuthentication {
-                try entryStore.markSynced(localEntry, remoteEntryID: localEntry.id.uuidString)
-                loadRecentEntries()
-                loadSelectedDateEntries()
-                errorMessage = nil
-                return
-            }
-
-            do {
-                let remoteEntry = try await entryClient.createEntry(
-                    title: title,
-                    notes: notes,
-                    projectId: project?.id,
-                    startedAt: startedAt,
-                    endedAt: endedAt,
-                    isBreak: false,
-                    tagIds: selectedTags.map(\.id)
-                )
-                try entryStore.markSynced(localEntry, remoteEntryID: remoteEntry.id)
-                loadRecentEntries()
-                loadSelectedDateEntries()
-            } catch {
-                try? entryStore.markSyncFailed(localEntry)
-                loadRecentEntries()
-                loadSelectedDateEntries()
-                errorMessage = "作業記録をローカル保存しましたが、同期に失敗しました。"
-            }
-        } catch {
-            errorMessage = "作業記録を保存できませんでした。"
-        }
-    }
-
     deinit {
-        timer?.invalidate()
+        sessionTimer?.invalidate()
     }
 
     private static func localDevelopmentUser() -> AuthUser {
