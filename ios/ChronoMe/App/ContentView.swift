@@ -780,6 +780,8 @@ private struct TagEditView: View {
     let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(
         for: TimeEntryRecord.self,
+        ProjectRecord.self,
+        TagRecord.self,
         configurations: configuration
     )
         ContentView(

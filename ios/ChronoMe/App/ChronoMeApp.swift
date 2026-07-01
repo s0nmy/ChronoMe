@@ -8,7 +8,11 @@ struct ChronoMeApp: App {
 
     init() {
         do {
-            let container = try ModelContainer(for: TimeEntryRecord.self)
+            let container = try ModelContainer(
+                for: TimeEntryRecord.self,
+                ProjectRecord.self,
+                TagRecord.self
+            )
             let apiClient = APIClient()
             let authClient = AuthClient(apiClient: apiClient)
             let projectClient = ProjectClient(apiClient: apiClient)
@@ -27,6 +31,7 @@ struct ChronoMeApp: App {
                     projectClient: projectClient,
                     tagClient: tagClient,
                     entryClient: entryClient,
+                    workspaceStore: SwiftDataWorkspaceStore(modelContext: container.mainContext),
                     skipsAuthentication: skipsAuthentication
                 )
             )

@@ -66,6 +66,7 @@ final class AppFeature: ObservableObject {
     private let projectClient: ProjectClientProtocol
     private let tagClient: TagClientProtocol
     private let entryClient: EntryClientProtocol
+    private let workspaceStore: WorkspaceStoring?
     private let skipsAuthentication: Bool
 
     init(
@@ -74,6 +75,7 @@ final class AppFeature: ObservableObject {
         projectClient: ProjectClientProtocol,
         tagClient: TagClientProtocol,
         entryClient: EntryClientProtocol,
+        workspaceStore: WorkspaceStoring? = nil,
         skipsAuthentication: Bool = false
     ) {
         self.entryStore = entryStore
@@ -81,9 +83,11 @@ final class AppFeature: ObservableObject {
         self.projectClient = projectClient
         self.tagClient = tagClient
         self.entryClient = entryClient
+        self.workspaceStore = workspaceStore
         self.skipsAuthentication = skipsAuthentication
         if skipsAuthentication {
             authState = .signedIn(Self.localDevelopmentUser())
+            loadLocalWorkspaceData()
         }
         loadRecentEntries()
         loadSelectedDateEntries()
@@ -161,6 +165,7 @@ final class AppFeature: ObservableObject {
     func restoreSession() {
         if skipsAuthentication {
             authState = .signedIn(Self.localDevelopmentUser())
+            loadLocalWorkspaceData()
             return
         }
 
@@ -453,7 +458,7 @@ final class AppFeature: ObservableObject {
 
     private func loadWorkspaceData() async {
         guard !skipsAuthentication else {
-            errorMessage = nil
+            loadLocalWorkspaceData()
             return
         }
 
@@ -469,6 +474,18 @@ final class AppFeature: ObservableObject {
                 self.selectedProjectID = nil
             }
             selectedTagIDs = selectedTagIDs.intersection(Set(self.tags.map(\.id)))
+            errorMessage = nil
+        } catch {
+            errorMessage = "プロジェクトとタグを読み込めませんでした。"
+        }
+    }
+
+    private func loadLocalWorkspaceData() {
+        guard let workspaceStore else { return }
+
+        do {
+            projects = try workspaceStore.fetchProjects()
+            tags = try workspaceStore.fetchTags()
             errorMessage = nil
         } catch {
             errorMessage = "プロジェクトとタグを読み込めませんでした。"
@@ -627,6 +644,7 @@ final class AppFeature: ObservableObject {
                         createdAt: project.createdAt,
                         updatedAt: Date()
                     )
+                    try workspaceStore?.saveProject(updated)
                     if let index = projects.firstIndex(where: { $0.id == updated.id }) {
                         projects[index] = updated
                     }
@@ -644,6 +662,7 @@ final class AppFeature: ObservableObject {
                         createdAt: Date(),
                         updatedAt: Date()
                     )
+                    try workspaceStore?.saveProject(created)
                     projects.insert(created, at: 0)
                     selectedProjectID = created.id
                 }
@@ -698,6 +717,7 @@ final class AppFeature: ObservableObject {
                         createdAt: tag.createdAt,
                         updatedAt: Date()
                     )
+                    try workspaceStore?.saveTag(updated)
                     if let index = tags.firstIndex(where: { $0.id == updated.id }) {
                         tags[index] = updated
                     }
@@ -710,6 +730,7 @@ final class AppFeature: ObservableObject {
                         createdAt: Date(),
                         updatedAt: Date()
                     )
+                    try workspaceStore?.saveTag(created)
                     tags.insert(created, at: 0)
                     selectedTagIDs.insert(created.id)
                 }
