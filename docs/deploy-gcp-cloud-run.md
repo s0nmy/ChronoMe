@@ -31,7 +31,7 @@ graph TB
     end
 
     subgraph CloudSQL["Cloud SQL"]
-        DB["PostgreSQL 15<br/>Private IP Connection"]
+        DB["PostgreSQL 15<br/>Cloud SQL Connection"]
     end
 
     User -->|HTTPS| Nginx
@@ -44,7 +44,7 @@ graph TB
 - マルチステージDockerビルドで、フロントエンドとバックエンドを1つのコンテナに統合
 - Nginxをリバースプロキシとして使用し、`/api/*` リクエストをGoバックエンドに転送
 - 静的ファイル（React）はNginxから直接配信
-- Cloud SQLはプライベートIP経由で接続（Cloud SQL Proxyは不要）
+- Cloud SQLはCloud RunのCloud SQL接続（Unix socket）で接続
 
 ---
 
@@ -73,10 +73,10 @@ graph TB
 ### 2. Cloud SQL (PostgreSQL)
 **用途:** データベース
 **推奨インスタンス:**
-- **開発/小規模:** `db-f1-micro` (共有vCPU, 0.6GB RAM) - 約$7-10/月
-- **本番/中規模:** `db-g1-small` (共有vCPU, 1.7GB RAM) - 約$15-20/月
+- **標準:** `db-g1-small` (共有vCPU, 1.7GB RAM) - 約$15-20/月
+- **最小構成:** `db-f1-micro` (共有vCPU, 0.6GB RAM) - 約$7-10/月
 
-**ストレージ:** 10GB SSD - 約$2.22/月
+**ストレージ:** 20GB SSD
 
 ### 3. Artifact Registry
 **用途:** Dockerイメージの保存
@@ -116,7 +116,7 @@ graph TB
 
 | 変数名 | 必須 | 説明 | 値 |
 |--------|------|------|-----|
-| `VITE_API_BASE_URL` | ❌ | APIベースURL | `/api` (同一オリジン) |
+| `VITE_API_BASE_URL` | ❌ | APIベースURL | 未設定または空文字（同一オリジン） |
 
 **注:** 現在のフロントエンド設定では、`/api` プロキシを使用しているため、同一ドメイン上で動作します。
 
@@ -163,10 +163,10 @@ gcloud services enable cloudbuild.googleapis.com
 # Secret Manager API
 gcloud services enable secretmanager.googleapis.com
 
-# Compute Engine API（VPC用）
+# Compute Engine API（Private IPを使う場合のみ）
 gcloud services enable compute.googleapis.com
 
-# サービスネットワーキングAPI（Cloud SQL Private IP用）
+# サービスネットワーキングAPI（Cloud SQL Private IPを使う場合のみ）
 gcloud services enable servicenetworking.googleapis.com
 ```
 
@@ -187,27 +187,37 @@ gcloud auth configure-docker asia-northeast1-docker.pkg.dev
 
 ### Phase 2: Cloud SQLセットアップ
 
+#### 2.0 Private IP用のVPC Peering作成（Private IPを使う場合のみ）
+
+標準構成では、Cloud Runの `--set-cloudsql-instances` と Unix socket 接続を使用するため、この手順は不要です。
+
+Cloud SQLをPrivate IPで作成するために `--network=default` を指定する場合のみ、事前にPrivate Services Accessを設定してください。未設定のまま作成すると `NETWORK_NOT_PEERED` エラーになります。
+
+```bash
+# Service Networking APIが未有効の場合
+gcloud services enable servicenetworking.googleapis.com
+
+# default VPC向けの予約IPレンジを作成
+gcloud compute addresses create google-managed-services-default \
+  --global \
+  --purpose=VPC_PEERING \
+  --prefix-length=16 \
+  --network=projects/${PROJECT_ID}/global/networks/default
+
+# VPCとGoogle managed servicesをピアリング
+gcloud services vpc-peerings connect \
+  --service=servicenetworking.googleapis.com \
+  --ranges=google-managed-services-default \
+  --network=default \
+  --project=${PROJECT_ID}
+```
+
+既に予約レンジやピアリングが存在する場合、この手順は不要です。
+
 #### 2.1 PostgreSQLインスタンス作成
 
 ```bash
-# Cloud SQL インスタンス作成（db-f1-micro: 小規模向け）
-gcloud sql instances create chronome-db \
-  --database-version=POSTGRES_15 \
-  --tier=db-f1-micro \
-  --region=asia-northeast1 \
-  --storage-type=SSD \
-  --storage-size=10GB \
-  --storage-auto-increase \
-  --backup-start-time=03:00 \
-  --enable-bin-log \
-  --retained-backups-count=7 \
-  --network=default
-
-# 作成完了まで数分かかります
-```
-
-**本番環境推奨設定（db-g1-small以上）:**
-```bash
+# Cloud SQL インスタンス作成
 gcloud sql instances create chronome-db \
   --database-version=POSTGRES_15 \
   --tier=db-g1-small \
@@ -216,10 +226,11 @@ gcloud sql instances create chronome-db \
   --storage-size=20GB \
   --storage-auto-increase \
   --backup-start-time=03:00 \
-  --enable-bin-log \
+  --enable-point-in-time-recovery \
   --retained-backups-count=7 \
-  --retained-transaction-log-days=7 \
-  --network=default
+  --retained-transaction-log-days=7
+
+# 作成完了まで数分かかります
 ```
 
 #### 2.2 データベースとユーザー作成
@@ -267,11 +278,11 @@ echo -n "$SESSION_SECRET" | gcloud secrets create chronome-session-secret \
   --data-file=- \
   --replication-policy="automatic"
 
-# Cloud Runサービスアカウントにアクセス権限付与（後で実行）
-# PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
-# gcloud secrets add-iam-policy-binding chronome-session-secret \
-#   --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
-#   --role="roles/secretmanager.secretAccessor"
+# Cloud Runサービスアカウントにアクセス権限付与
+PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
+gcloud secrets add-iam-policy-binding chronome-session-secret \
+  --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
 ```
 
 #### 3.2 データベースパスワードの保存（オプション）
@@ -512,11 +523,8 @@ export PROJECT_ID="your-gcp-project-id"
 # イメージタグを設定
 export IMAGE_TAG="asia-northeast1-docker.pkg.dev/${PROJECT_ID}/chronome-repo/chronome:latest"
 
-# Dockerイメージをビルド
-docker build -t $IMAGE_TAG .
-
-# Artifact Registryにプッシュ
-docker push $IMAGE_TAG
+# Cloud Run向けにlinux/amd64イメージをビルドしてArtifact Registryにプッシュ
+docker buildx build --platform linux/amd64 -t "$IMAGE_TAG" --push .
 ```
 
 #### 6.2 Cloud Runサービスをデプロイ
@@ -530,13 +538,13 @@ export SESSION_SECRET=$(gcloud secrets versions access latest --secret="chronome
 
 # Cloud Runにデプロイ
 gcloud run deploy chronome \
-  --image=$IMAGE_TAG \
+  --image="$IMAGE_TAG" \
   --platform=managed \
   --region=asia-northeast1 \
   --allow-unauthenticated \
   --set-env-vars="APP_ENV=production,SERVER_ADDRESS=:8081,DB_DRIVER=postgres,ALLOWED_ORIGIN=https://chronome-HASH-an.a.run.app,SESSION_COOKIE_SECURE=true" \
   --set-secrets="SESSION_SECRET=chronome-session-secret:latest" \
-  --set-cloudsql-instances=$INSTANCE_CONNECTION_NAME \
+  --set-cloudsql-instances="$INSTANCE_CONNECTION_NAME" \
   --memory=512Mi \
   --cpu=1 \
   --min-instances=0 \
@@ -724,15 +732,15 @@ gcloud logging read "resource.type=cloud_run_revision AND resource.labels.servic
 
 ## コスト見積もり
 
-### 月額料金試算（小規模運用）
+### 月額料金試算（標準構成）
 
 | サービス | 仕様 | 月額料金 |
 |---------|------|---------|
 | Cloud Run | 無料枠内（200万リクエスト/月） | $0 |
-| Cloud SQL (db-f1-micro) | PostgreSQL 15, 0.6GB RAM, 10GB SSD | $7-10 |
+| Cloud SQL (db-g1-small) | PostgreSQL 15, 1.7GB RAM, 20GB SSD | $15-20 |
 | Artifact Registry | 1GB程度のイメージ保存 | $0.10 |
 | Secret Manager | 2シークレット | $0 (無料枠) |
-| **合計** | | **約$7-11/月** |
+| **合計** | | **約$15-21/月** |
 
 ### 月額料金試算（中規模運用）
 
@@ -746,7 +754,7 @@ gcloud logging read "resource.type=cloud_run_revision AND resource.labels.servic
 
 **無料枠の活用:**
 - Cloud Runの無料枠（200万リクエスト/月）内であれば、コンピューティングコストは$0
-- 小規模なアプリケーションなら、**DB代のみの$7-10/月で運用可能**
+- 標準構成では、Cloud Runが無料枠内なら主な費用はCloud SQLです
 
 ---
 
