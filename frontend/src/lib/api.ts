@@ -1,6 +1,6 @@
 import type { Entry, Project, ProjectFormData, Tag, User } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 const CSRF_COOKIE_NAME = 'chronome_csrf';
 const CSRF_HEADER_NAME = 'X-CSRF-Token';
 
