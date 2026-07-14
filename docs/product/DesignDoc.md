@@ -43,7 +43,7 @@ graph TD
 
 ## クリーンアーキテクチャ設計原則
 
-ChronoMe バックエンドはクリーンアーキテクチャを採用し、依存性は常に内向き（Handler → Usecase → Entity）となるよう設計しています。詳細な層ごとの責務、依存性注入、テスト方針、トランザクション設計などは `docs/CleanArchitecture.md` を参照してください。
+ChronoMe バックエンドはクリーンアーキテクチャを採用し、依存性は常に内向き（Handler → Usecase → Entity）となるよう設計しています。詳細な層ごとの責務、依存性注入、テスト方針、トランザクション設計などは [CleanArchitecture.md](../architecture/CleanArchitecture.md) を参照してください。
 
 本ドキュメントでは方針を以下に要約します。
 
@@ -104,7 +104,7 @@ frontend/
 ## データベース設計（概要）
 
 主要なエンティティとその関係性を以下に示します。  
-詳細なテーブル定義、制約、インデックス設計は [DBDesign.md](./DBDesign.md) を参照してください。
+詳細なテーブル定義、制約、インデックス設計は [DBDesign.md](../architecture/DBDesign.md) を参照してください。
 
 ```mermaid
 erDiagram
@@ -208,7 +208,7 @@ erDiagram
 ## API設計（概要）
 
 RESTful API を採用し、JSON でデータを送受信します。  
-詳細なリクエスト/レスポンス仕様は [APIDesign.md](./APIDesign.md) を参照してください。
+詳細なリクエスト/レスポンス仕様は [APIDesign.md](../architecture/APIDesign.md) を参照してください。
 
 | 区分 | メソッド | パス | 概要 | 認証 |
 |------|-----------|------|------|------|
@@ -267,7 +267,7 @@ graph LR
 - **軽量統合テスト**：インメモリまたはファイル SQLite を用いて Repository の CRUD を確認し、主要制約を網羅する（PostgreSQL でも同テストが動作するように抽象化する）。
 - **手動確認の併用**：UI のシナリオは手動で確認し、自動 E2E は将来の課題として切り出す。
 
-詳細な実装ガイドラインは [CleanArchitecture.md](./CleanArchitecture.md) を参照してください。
+詳細な実装ガイドラインは [CleanArchitecture.md](../architecture/CleanArchitecture.md) を参照してください。
 
 ---
 
@@ -289,7 +289,7 @@ graph LR
 - 本番ではシステム時刻実装、テストでは固定時刻を返すスタブを用意する
 - DI 経由で差し替え、時刻依存ロジックを安定して検証できるようにする
 
-詳細なテスト実装例は [TestStrategy.md](./TestStrategy.md) を参照してください。
+詳細なテスト実装例は [TestStrategy.md](../development/TestStrategy.md) を参照してください。
 
 ### Mock 生成
 ```bash

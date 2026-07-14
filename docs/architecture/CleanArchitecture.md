@@ -1,6 +1,6 @@
 # ChronoMe クリーンアーキテクチャ実装ガイド
 
-本ドキュメントは `docs/DesignDoc.md` から切り出したクリーンアーキテクチャの詳細実装方法です。ChronoMe の Go バックエンド実装における具体的なコード例、ベストプラクティス、テスト戦略を提供します。
+本ドキュメントは [DesignDoc.md](../product/DesignDoc.md) から切り出したクリーンアーキテクチャの詳細実装方法です。ChronoMe の Go バックエンド実装における具体的なコード例、ベストプラクティス、テスト戦略を提供します。
 
 ---
 
@@ -139,9 +139,9 @@ backend/
 ## 10. 参考
 
 - Robert C. Martin, *Clean Architecture*  
-- `docs/DesignDoc.md`：全体技術設計  
-- `docs/APIDesign.md`：REST API 詳細  
-- `docs/DBDesign.md`：データベース設計
+- [DesignDoc.md](../product/DesignDoc.md)：全体技術設計
+- [APIDesign.md](APIDesign.md)：REST API 詳細
+- [DBDesign.md](DBDesign.md)：データベース設計
 
 本ドキュメントはクリーンアーキテクチャの適用状況を定期レビューする際の参照資料として利用し、必要に応じて更新してください。
 

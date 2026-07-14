@@ -1,0 +1,462 @@
+.chronome-exhibit {
+  --cm-ink: #111827;
+  --cm-text: #374151;
+  --cm-muted: #6b7280;
+  --cm-line: #e5e7eb;
+  --cm-soft: #f9fafb;
+  --cm-blue: #2563eb;
+  --cm-green: #16a34a;
+  --cm-orange: #f97316;
+  --cm-purple: #7c3aed;
+
+  width: min(100%, 680px);
+  container-type: inline-size;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 0;
+  color: var(--cm-ink);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-family:
+    Inter,
+    "Noto Sans JP",
+    "Hiragino Kaku Gothic ProN",
+    "Yu Gothic",
+    sans-serif;
+}
+
+.chronome-exhibit *,
+.chronome-exhibit *::before,
+.chronome-exhibit *::after {
+  box-sizing: border-box;
+}
+
+.chronome-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--cm-line);
+}
+
+.chronome-eyebrow,
+.chronome-caption,
+.chronome-summary__label,
+.chronome-highlight span {
+  display: block;
+  margin: 0;
+  color: var(--cm-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.chronome-title {
+  margin: 4px 0 0;
+  color: var(--cm-ink);
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+.chronome-header__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  color: var(--cm-text);
+  border: 1px solid var(--cm-line);
+  border-radius: 6px;
+  background: var(--cm-soft);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.chronome-lead {
+  margin: 14px 0 18px;
+  color: var(--cm-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.75;
+}
+
+.chronome-app {
+  display: grid;
+  grid-template-columns: 1fr;
+  overflow: hidden;
+  border: 1px solid var(--cm-line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.chronome-product-panel {
+  overflow: hidden;
+  border: 1px solid var(--cm-line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.chronome-app-header,
+.chronome-sidebar {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border-bottom: 1px solid var(--cm-line);
+  background: var(--cm-soft);
+}
+
+.chronome-app-header strong,
+.chronome-sidebar strong {
+  display: flex;
+  align-items: center;
+  min-height: 22px;
+  color: var(--cm-ink);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.chronome-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+}
+
+.chronome-nav span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 34px;
+  padding: 8px 6px;
+  color: var(--cm-muted);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.chronome-nav span.is-active {
+  color: var(--cm-blue);
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.chronome-main {
+  min-width: 0;
+  padding: 16px;
+  background: #ffffff;
+}
+
+.chronome-main__head,
+.chronome-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chronome-screen-title,
+.chronome-panel-title {
+  margin: 3px 0 0;
+  color: var(--cm-ink);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.chronome-panel-title {
+  font-size: 14px;
+}
+
+.chronome-panel__head span {
+  color: var(--cm-muted);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.chronome-main__head button {
+  min-height: 34px;
+  padding: 0 12px;
+  color: #ffffff;
+  border: 1px solid var(--cm-blue);
+  border-radius: 6px;
+  background: var(--cm-blue);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.chronome-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.chronome-stats div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--cm-line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.chronome-stats span {
+  display: block;
+  color: var(--cm-muted);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.chronome-stats strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--cm-ink);
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.chronome-panel {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--cm-line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.chronome-timeline {
+  display: grid;
+  grid-template-columns: 1.05fr 1.55fr 0.55fr 1fr;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.chronome-timeline__block {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 38px;
+  padding: 0 9px;
+  color: #ffffff;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.2;
+  overflow: hidden;
+}
+
+.chronome-timeline__block--planning {
+  background: var(--cm-purple);
+}
+
+.chronome-timeline__block--code {
+  background: var(--cm-blue);
+}
+
+.chronome-timeline__block--break {
+  background: var(--cm-orange);
+}
+
+.chronome-timeline__block--review {
+  background: var(--cm-green);
+}
+
+.chronome-entry-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.chronome-entry {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--cm-line);
+}
+
+.chronome-entry:last-child {
+  border-bottom: 0;
+}
+
+.chronome-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.chronome-dot--blue {
+  background: var(--cm-blue);
+}
+
+.chronome-dot--green {
+  background: var(--cm-green);
+}
+
+.chronome-dot--orange {
+  background: var(--cm-orange);
+}
+
+.chronome-entry strong,
+.chronome-entry span,
+.chronome-entry em {
+  display: block;
+  min-width: 0;
+}
+
+.chronome-entry strong {
+  color: var(--cm-ink);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.chronome-entry span {
+  margin-top: 2px;
+  color: var(--cm-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.chronome-entry em {
+  color: var(--cm-text);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.chronome-summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.chronome-summary > div,
+.chronome-skill,
+.chronome-highlight {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--cm-line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.chronome-summary p,
+.chronome-skill p,
+.chronome-highlight p {
+  margin: 6px 0 0;
+  color: var(--cm-text);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.chronome-skillmap {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.chronome-skill {
+  display: block;
+  padding: 14px;
+}
+
+.chronome-skill-title {
+  margin: 0 0 6px;
+  color: var(--cm-ink);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.chronome-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.chronome-tags span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  color: var(--cm-text);
+  border: 1px solid var(--cm-line);
+  border-radius: 6px;
+  background: var(--cm-soft);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.chronome-highlight {
+  margin-top: 10px;
+  background: var(--cm-soft);
+}
+
+@media (max-width: 620px) {
+  .chronome-exhibit {
+    width: 100%;
+    padding: 0;
+  }
+
+  .chronome-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .chronome-timeline {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+@container (min-width: 560px) {
+  .chronome-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.chronome-exhibit .chronome-app {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  grid-template-rows: auto 1fr !important;
+}
+
+.chronome-exhibit .chronome-sidebar,
+.chronome-exhibit .chronome-app-header {
+  grid-column: 1 / -1 !important;
+  grid-row: 1 !important;
+  border-right: 0 !important;
+  border-bottom: 1px solid var(--cm-line) !important;
+}
+
+.chronome-exhibit .chronome-main {
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+}
+
+.chronome-exhibit .chronome-nav {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
