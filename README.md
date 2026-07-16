@@ -31,14 +31,14 @@ scheme と iPhone Simulator を選択して実行します。初回は Swift Pac
 
 ## ドキュメント
 
-- PRD: [`docs/PRD.md`](docs/PRD.md)
-- 設計ドキュメント: [`docs/DesignDoc.md`](docs/DesignDoc.md)
+- PRD: [`docs/product/PRD.md`](docs/product/PRD.md)
+- 設計ドキュメント: [`docs/product/DesignDoc.md`](docs/product/DesignDoc.md)
 - API/仕様: [`docs/`](docs/)
-- コミットルール: [`docs/CommitGuidelines.md`](docs/CommitGuidelines.md)
+- コミットルール: [`docs/development/CommitGuidelines.md`](docs/development/CommitGuidelines.md)
 
 ## Contributing
 
-詳細は [CONTRIBUTING.md](CONTRIBUTING.md) と [`docs/DesignDoc.md`](docs/DesignDoc.md) を参照してください。
+詳細は [CONTRIBUTING.md](CONTRIBUTING.md) と [`docs/product/DesignDoc.md`](docs/product/DesignDoc.md) を参照してください。
 
 - PR / MR 手順: ブランチ作成 → テスト/静的解析 → PR/MR 作成
 - コーディングスタンダード: Go は `gofmt`、フロントは ESLint と Prettier

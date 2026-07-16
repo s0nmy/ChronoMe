@@ -13,7 +13,7 @@
 
 ### コミットメッセージ
 
-コミットメッセージの詳細ルールは [docs/CommitGuidelines.md](docs/CommitGuidelines.md) を参照してください。
+コミットメッセージの詳細ルールは [docs/development/CommitGuidelines.md](docs/development/CommitGuidelines.md) を参照してください。
 
 ## コーディングスタンダード
 
@@ -74,4 +74,4 @@ npm run lint
 
 - Go バックエンドは Handler / Usecase / Repository の層構造を維持します。
 - React フロントエンドは `features/` 単位で機能を分割し、UI は `components/` に集約します。
-- 仕様や設計の詳細は `docs/DesignDoc.md` を参照してください。
+- 仕様や設計の詳細は `docs/product/DesignDoc.md` を参照してください。

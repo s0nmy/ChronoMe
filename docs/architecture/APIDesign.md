@@ -2,7 +2,7 @@
 
 最終更新: 2025-10-16（執筆日で更新してください）
 
-本ドキュメントは「docs/DesignDoc.md」の技術設計を基に、ChronoMe（React + TypeScript フロントエンド、Go バックエンド）の REST API を詳細化したものです。開発者および QA が共通認識を持つための仕様書として利用します。
+本ドキュメントは [DesignDoc.md](../product/DesignDoc.md) の技術設計を基に、ChronoMe（React + TypeScript フロントエンド、Go バックエンド）の REST API を詳細化したものです。開発者および QA が共通認識を持つための仕様書として利用します。
 
 ---
 
@@ -20,7 +20,7 @@
   - `4xx`: クライアントエラー (`400`, `401`, `403`, `404`, `409`, `422`)
 - `5xx`: サーバーエラー（想定外は `500`。リカバリ可能な一時的障害は `503`）
 
-> データベース列・制約の詳細は `docs/DBDesign.md` を参照してください。
+> データベース列・制約の詳細は [DBDesign.md](DBDesign.md) を参照してください。
 
 ---
 
@@ -67,7 +67,7 @@
 ## 4. モデル定義
 
 ### 4.1 User
-> 対応テーブル: `docs/DBDesign.md` 「4.1 users」
+> 対応テーブル: [DBDesign.md](DBDesign.md) 「4.1 users」
 
 | フィールド | 型 | 説明 |
 | --- | --- | --- |
@@ -79,7 +79,7 @@
 | `updated_at` | string(datetime) | 更新日時 |
 
 ### 4.2 Project
-> 対応テーブル: `docs/DBDesign.md` 「4.2 projects」
+> 対応テーブル: [DBDesign.md](DBDesign.md) 「4.2 projects」
 
 | フィールド | 型 | 説明 |
 | --- | --- | --- |
@@ -92,7 +92,7 @@
 | `updated_at` | string(datetime) | 更新日時 |
 
 ### 4.3 Tag
-> 対応テーブル: `docs/DBDesign.md` 「4.3 tags」
+> 対応テーブル: [DBDesign.md](DBDesign.md) 「4.3 tags」
 
 | フィールド | 型 | 説明 |
 | --- | --- | --- |
@@ -103,7 +103,7 @@
 | `created_at` / `updated_at` | string(datetime) | 作成・更新日時 |
 
 ### 4.4 Entry
-> 対応テーブル: `docs/DBDesign.md` 「4.4 entries」
+> 対応テーブル: [DBDesign.md](DBDesign.md) 「4.4 entries」
 
 | フィールド | 型 | 説明 |
 | --- | --- | --- |
@@ -121,7 +121,7 @@
 | `created_at` / `updated_at` | string(datetime) | 作成・更新日時 |
 
 ### 4.5 ReportSummary
-> 集計は `docs/DBDesign.md` 「5. ビュー / マテリアライズドビュー（任意提案）」を参照
+> 集計は [DBDesign.md](DBDesign.md) 「5. ビュー / マテリアライズドビュー（任意提案）」を参照
 
 | フィールド | 型 | 説明 |
 | --- | --- | --- |
@@ -516,6 +516,6 @@
 ---
 
 ## 12. 参考情報
-- 技術設計全体: `docs/DesignDoc.md`
-- ER 図: `docs/DesignDoc.md` の「データベース設計」節
-- 認証・運用ポリシー: `docs/DesignDoc.md` の「実装方針」「セキュリティ・運用」節
+- 技術設計全体: [DesignDoc.md](../product/DesignDoc.md)
+- ER 図: [DesignDoc.md](../product/DesignDoc.md) の「データベース設計」節
+- 認証・運用ポリシー: [DesignDoc.md](../product/DesignDoc.md) の「実装方針」「セキュリティ・運用」節

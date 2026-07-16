@@ -62,6 +62,6 @@ ChronoMeは個人向けタイムカードWebアプリケーションです。本
 
 ## 参考
 
-- [Web版PRD](../PRD.md)
-- [API設計](../APIDesign.md)
-- [DB設計](../DBDesign.md)
+- [Web版PRD](../product/PRD.md)
+- [API設計](../architecture/APIDesign.md)
+- [DB設計](../architecture/DBDesign.md)

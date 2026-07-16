@@ -1,0 +1,166 @@
+<section class="chronome-exhibit" aria-labelledby="chronome-exhibit-title">
+  <header class="chronome-header">
+    <div>
+      <p class="chronome-eyebrow">一人用タイムカード Webアプリ</p>
+      <h2 id="chronome-exhibit-title" class="chronome-title">ChronoMe</h2>
+    </div>
+    <span class="chronome-header__badge">個人開発</span>
+  </header>
+
+  <p class="chronome-lead">
+    作業時間を「記録する」だけで終わらせず、日次・週次・月次で振り返り、
+    自分の時間配分を改善するためのアプリです。
+  </p>
+
+  <div class="chronome-app" aria-label="ChronoMe Web版の画面イメージ">
+    <div class="chronome-app-header" aria-label="ヘッダーナビゲーション">
+      <strong>ChronoMe</strong>
+      <div class="chronome-nav">
+        <span class="is-active">ダッシュボード</span>
+        <span>作業記録</span>
+        <span>プロジェクト</span>
+        <span>タグ</span>
+        <span>レポート</span>
+      </div>
+    </div>
+
+    <div class="chronome-main">
+      <div class="chronome-main__head">
+        <div>
+          <span class="chronome-caption">Today</span>
+          <div class="chronome-screen-title">本日の作業</div>
+        </div>
+        <button type="button">記録を追加</button>
+      </div>
+
+      <div class="chronome-stats">
+        <div>
+          <span>作業時間</span>
+          <strong>6h 25m</strong>
+        </div>
+        <div>
+          <span>記録数</span>
+          <strong>8</strong>
+        </div>
+        <div>
+          <span>集中比率</span>
+          <strong>78%</strong>
+        </div>
+      </div>
+
+      <section class="chronome-panel" aria-label="タイムライン">
+        <div class="chronome-panel__head">
+          <div class="chronome-panel-title">タイムライン</div>
+          <span>09:00 - 18:00</span>
+        </div>
+        <div class="chronome-timeline">
+          <span class="chronome-timeline__block chronome-timeline__block--planning">設計</span>
+          <span class="chronome-timeline__block chronome-timeline__block--code">実装</span>
+          <span class="chronome-timeline__block chronome-timeline__block--break">休憩</span>
+          <span class="chronome-timeline__block chronome-timeline__block--review">振り返り</span>
+        </div>
+      </section>
+
+      <section class="chronome-panel" aria-label="作業記録">
+        <div class="chronome-panel__head">
+          <div class="chronome-panel-title">作業記録</div>
+          <span>プロジェクト別</span>
+        </div>
+        <div class="chronome-entry-list">
+          <div class="chronome-entry">
+            <span class="chronome-dot chronome-dot--blue"></span>
+            <div>
+              <strong>フロントエンド実装</strong>
+              <span>React / TypeScript</span>
+            </div>
+            <em>3h 05m</em>
+          </div>
+          <div class="chronome-entry">
+            <span class="chronome-dot chronome-dot--green"></span>
+            <div>
+              <strong>API設計</strong>
+              <span>Go / Clean Architecture</span>
+            </div>
+            <em>2h 10m</em>
+          </div>
+          <div class="chronome-entry">
+            <span class="chronome-dot chronome-dot--orange"></span>
+            <div>
+              <strong>週次レポート確認</strong>
+              <span>集計 / 可視化</span>
+            </div>
+            <em>1h 10m</em>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="chronome-summary">
+    <div>
+      <span class="chronome-summary__label">課題</span>
+      <p>個人開発・学習・副業では、複数作業の時間配分が曖昧になりやすい。</p>
+    </div>
+    <div>
+      <span class="chronome-summary__label">解決</span>
+      <p>プロジェクト・タグ・レポートで、作業の量と偏りを視覚的に把握できる。</p>
+    </div>
+  </div>
+
+  <div class="chronome-skillmap" aria-label="評価観点">
+    <article class="chronome-skill">
+      <div>
+        <h3 class="chronome-skill-title">01 企画</h3>
+        <p>
+          チーム向け勤怠管理ではなく、個人が毎日使い続けられる軽さに焦点を絞りました。
+          記録、分類、振り返りを一つの流れにし、時間管理の習慣化を狙っています。
+        </p>
+      </div>
+    </article>
+
+    <article class="chronome-skill">
+      <div>
+        <h3 class="chronome-skill-title">02 コーディング技術</h3>
+        <p>
+          フロントエンドは React + TypeScript + Vite、API通信は TanStack Query。
+          バックエンドは Go + Chi + GORM を用い、Clean Architectureで責務を分離しています。
+        </p>
+        <div class="chronome-tags" aria-label="使用技術">
+          <span>React</span>
+          <span>TypeScript</span>
+          <span>Go</span>
+          <span>Chi</span>
+          <span>GORM</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="chronome-skill">
+      <div>
+        <h3 class="chronome-skill-title">03 インフラ技術</h3>
+        <p>
+          開発初期は SQLite で素早く検証し、DSN切替で PostgreSQL へ移行できる構成にしています。
+          Cloud Run、Nginx、Docker、Cloud SQL を想定したデプロイ設計も整理済みです。
+        </p>
+      </div>
+    </article>
+
+    <article class="chronome-skill">
+      <div>
+        <h3 class="chronome-skill-title">04 UI／UX、デザイン</h3>
+        <p>
+          タイマー、タイムライン、日次・週次・月次レポートを中心に、入力の速さと振り返りやすさを重視。
+          作業比率を色とグラフで示し、数字だけでは見えにくい偏りを直感的に伝えます。
+        </p>
+      </div>
+    </article>
+  </div>
+
+  <div class="chronome-highlight">
+    <span>Judge Point</span>
+    <p>
+      ChronoMeの魅力は、学習用アプリで終わらず「使い続ける理由」まで設計している点です。
+      企画、実装、データ設計、運用計画、UI表現が同じ目的に向かって接続されています。
+    </p>
+  </div>
+</section>
