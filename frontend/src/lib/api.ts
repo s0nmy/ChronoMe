@@ -1,8 +1,7 @@
 import type { Entry, Project, ProjectFormData, Tag, User } from '../types';
+import { getAccessToken } from './supabase';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
-const CSRF_COOKIE_NAME = 'chronome_csrf';
-const CSRF_HEADER_NAME = 'X-CSRF-Token';
 
 export class APIError extends Error {
   status: number;
@@ -14,29 +13,7 @@ export class APIError extends Error {
   }
 }
 
-interface RequestOptions extends RequestInit {
-  skipCsrf?: boolean;
-}
-
-function requiresCsrf(method: string) {
-  return !['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase());
-}
-
-function getCsrfToken(): string | null {
-  if (typeof document === 'undefined') {
-    return null;
-  }
-  const cookie = document.cookie
-    .split(';')
-    .map((part) => part.trim())
-    .find((part) => part.startsWith(`${CSRF_COOKIE_NAME}=`));
-  if (!cookie) {
-    return null;
-  }
-  return decodeURIComponent(cookie.split('=').at(1) ?? '');
-}
-
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const method = (options.method ?? 'GET').toUpperCase();
   const headers = new Headers(options.headers ?? {});
   if (!headers.has('Accept')) {
@@ -45,19 +22,15 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
-  if (!options.skipCsrf && requiresCsrf(method)) {
-    const token = getCsrfToken();
-    if (!token) {
-      throw new APIError('CSRF token is missing. Please log in again.', 401);
-    }
-    headers.set(CSRF_HEADER_NAME, token);
+  const accessToken = await getAccessToken();
+  if (accessToken) {
+    headers.set('Authorization', `Bearer ${accessToken}`);
   }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     method,
     headers,
-    credentials: 'include',
   });
 
   if (!response.ok) {
@@ -145,29 +118,6 @@ function mapEntry(payload: any): Entry {
   };
 }
 
-export async function signup(params: { email: string; password: string; displayName?: string; timeZone?: string }) {
-  const response = await request<{ user: any }>('/api/auth/signup', {
-    method: 'POST',
-    skipCsrf: true,
-    body: JSON.stringify({
-      email: params.email,
-      password: params.password,
-      display_name: params.displayName,
-      time_zone: params.timeZone,
-    }),
-  });
-  return mapUser(response.user);
-}
-
-export async function login(email: string, password: string) {
-  const response = await request<{ user: any }>('/api/auth/login', {
-    method: 'POST',
-    skipCsrf: true,
-    body: JSON.stringify({ email, password }),
-  });
-  return mapUser(response.user);
-}
-
 export async function fetchCurrentUser(): Promise<User | null> {
   try {
     const response = await request<{ user: any }>('/api/auth/me');
@@ -178,10 +128,6 @@ export async function fetchCurrentUser(): Promise<User | null> {
     }
     throw error;
   }
-}
-
-export async function logout() {
-  await request('/api/auth/logout', { method: 'POST' });
 }
 
 export async function listProjects(): Promise<Project[]> {
@@ -306,10 +252,7 @@ export async function bootstrap(): Promise<BootstrapData> {
 }
 
 export type ApiClient = {
-  signup: typeof signup;
-  login: typeof login;
   fetchCurrentUser: typeof fetchCurrentUser;
-  logout: typeof logout;
   listProjects: typeof listProjects;
   createProject: typeof createProject;
   updateProject: typeof updateProject;
@@ -323,10 +266,7 @@ export type ApiClient = {
 };
 
 export const api: ApiClient = {
-  signup,
-  login,
   fetchCurrentUser,
-  logout,
   listProjects,
   createProject,
   updateProject,
