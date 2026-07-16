@@ -12,9 +12,11 @@ import (
 
 // FakeUserRepository はテスト用に repository.UserRepository を実装する。
 type FakeUserRepository struct {
-	CreateFn     func(context.Context, *entity.User) error
-	GetByEmailFn func(context.Context, string) (*entity.User, error)
-	GetByIDFn    func(context.Context, uuid.UUID) (*entity.User, error)
+	CreateFn           func(context.Context, *entity.User) error
+	GetByEmailFn       func(context.Context, string) (*entity.User, error)
+	GetByIDFn          func(context.Context, uuid.UUID) (*entity.User, error)
+	GetBySupabaseIDFn  func(context.Context, uuid.UUID) (*entity.User, error)
+	UpdateSupabaseIDFn func(context.Context, uuid.UUID, uuid.UUID) error
 }
 
 func (f *FakeUserRepository) Create(ctx context.Context, user *entity.User) error {
@@ -36,6 +38,20 @@ func (f *FakeUserRepository) GetByID(ctx context.Context, id uuid.UUID) (*entity
 		return f.GetByIDFn(ctx, id)
 	}
 	return nil, errors.New("GetByID not implemented")
+}
+
+func (f *FakeUserRepository) GetBySupabaseID(ctx context.Context, supabaseID uuid.UUID) (*entity.User, error) {
+	if f.GetBySupabaseIDFn != nil {
+		return f.GetBySupabaseIDFn(ctx, supabaseID)
+	}
+	return nil, errors.New("GetBySupabaseID not implemented")
+}
+
+func (f *FakeUserRepository) UpdateSupabaseID(ctx context.Context, id uuid.UUID, supabaseID uuid.UUID) error {
+	if f.UpdateSupabaseIDFn != nil {
+		return f.UpdateSupabaseIDFn(ctx, id, supabaseID)
+	}
+	return nil
 }
 
 // FakeProjectRepository はテスト用に repository.ProjectRepository を実装する。

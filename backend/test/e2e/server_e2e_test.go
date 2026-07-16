@@ -2,11 +2,13 @@ package e2e
 
 import (
 	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
 	"testing"
@@ -17,10 +19,8 @@ import (
 
 	"chronome/internal/adapter/db/gormrepo"
 	"chronome/internal/adapter/http/handler"
-	"chronome/internal/adapter/http/middleware"
 	"chronome/internal/adapter/infra/config"
 	"chronome/internal/adapter/infra/database"
-	sess "chronome/internal/adapter/infra/session"
 	infTime "chronome/internal/adapter/infra/time"
 	"chronome/internal/domain/entity"
 	"chronome/internal/usecase"
@@ -31,17 +31,10 @@ func TestChronoMeEndToEnd(t *testing.T) {
 	fx := newFixture(t)
 
 	email := "e2e-user@example.com"
-	password := "ChronoMePassw0rd!"
 
-	logStep(t, "starting signup scenario")
-	signedUp := fx.signup(email, password)
+	logStep(t, "creating Supabase-authenticated user scenario")
+	signedUp := fx.createSupabaseUser(email)
 	require.Equal(t, email, signedUp.Email)
-
-	fx.expectLoginFailure(email, "bad-password")
-
-	logStep(t, "performing login")
-	loggedIn := fx.login(email, password)
-	require.Equal(t, signedUp.ID, loggedIn.ID)
 
 	profile := fx.me()
 	require.Equal(t, signedUp.ID, profile.ID)
@@ -139,8 +132,9 @@ type fixture struct {
 	client   *http.Client
 	server   *httptest.Server
 	baseURL  string
-	baseHost *url.URL
 	origin   string
+	token    string
+	userRepo *gormrepo.UserRepository
 }
 
 func newFixture(t *testing.T) *fixture {
@@ -150,12 +144,10 @@ func newFixture(t *testing.T) *fixture {
 		Address:                ":0",
 		DBDriver:               "sqlite",
 		DBDsn:                  "file:chronome_e2e?mode=memory&cache=shared",
-		SessionTTLValue:        2 * time.Hour,
-		SessionSecret:          "0123456789abcdefghijklmnopqrstuvwxyz-secret",
-		SessionCookieSecure:    false,
 		AllowedOrigin:          "http://localhost",
 		Environment:            "test",
 		DefaultProjectColorHex: "#3B82F6",
+		SupabaseJWTSecret:      "0123456789abcdefghijklmnopqrstuvwxyz-secret",
 	}
 
 	db, err := database.Open(cfg)
@@ -167,27 +159,19 @@ func newFixture(t *testing.T) *fixture {
 
 	require.NoError(t, database.Automigrate(db))
 
-	sessionStore := sess.NewMemoryStore()
 	userRepo := gormrepo.NewUserRepository(db)
 	projectRepo := gormrepo.NewProjectRepository(db)
 	entryRepo := gormrepo.NewEntryRepository(db)
 	tagRepo := gormrepo.NewTagRepository(db)
 
-	authUC := usecase.NewAuthUsecase(userRepo)
 	projectUC := usecase.NewProjectUsecase(projectRepo, cfg)
 	tagUC := usecase.NewTagUsecase(tagRepo, cfg)
 	entryUC := usecase.NewEntryUsecase(entryRepo, tagRepo, infTime.SystemClock{})
 	reportUC := usecase.NewReportUsecase(entryRepo, projectRepo)
 
 	allocationUC := usecase.NewAllocationUsecase(&fakes.FakeAllocationRepository{}, fakes.FixedTimeProvider{})
-	apiHandler := handler.NewAPIHandler(cfg, sessionStore, authUC, projectUC, tagUC, entryUC, reportUC, allocationUC)
+	apiHandler := handler.NewAPIHandler(cfg, userRepo, projectUC, tagUC, entryUC, reportUC, allocationUC)
 	server := httptest.NewServer(apiHandler.Router())
-
-	jar, err := cookiejar.New(nil)
-	require.NoError(t, err)
-
-	baseURL, err := url.Parse(server.URL)
-	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		server.Close()
@@ -196,50 +180,31 @@ func newFixture(t *testing.T) *fixture {
 
 	return &fixture{
 		t:        t,
-		client:   &http.Client{Jar: jar},
+		client:   &http.Client{},
 		server:   server,
 		baseURL:  server.URL,
-		baseHost: baseURL,
 		origin:   cfg.AllowedOrigin,
+		userRepo: userRepo,
 	}
 }
 
-func (f *fixture) signup(email, password string) entity.User {
+func (f *fixture) createSupabaseUser(email string) entity.User {
 	f.t.Helper()
-	var resp struct {
-		User entity.User `json:"user"`
+	supabaseID := uuid.New()
+	user := &entity.User{
+		ID:             uuid.New(),
+		Email:          email,
+		PasswordHash:   "",
+		SupabaseUserID: &supabaseID,
+		IsMigrated:     true,
+		DisplayName:    "E2E User",
+		TimeZone:       "UTC",
 	}
-	status := f.doJSON(http.MethodPost, "/api/auth/signup", map[string]string{
-		"email":        email,
-		"password":     password,
-		"display_name": "E2E User",
-		"time_zone":    "UTC",
-	}, &resp)
-	require.Equal(f.t, http.StatusCreated, status)
-	return resp.User
-}
-
-func (f *fixture) expectLoginFailure(email, password string) {
-	f.t.Helper()
-	status, body := f.do(http.MethodPost, "/api/auth/login", map[string]string{
-		"email":    email,
-		"password": password,
-	})
-	require.Equal(f.t, http.StatusUnauthorized, status, string(body))
-}
-
-func (f *fixture) login(email, password string) entity.User {
-	f.t.Helper()
-	var resp struct {
-		User entity.User `json:"user"`
-	}
-	status := f.doJSON(http.MethodPost, "/api/auth/login", map[string]string{
-		"email":    email,
-		"password": password,
-	}, &resp)
-	require.Equal(f.t, http.StatusOK, status)
-	require.NotEmpty(f.t, f.csrfToken(), "login should issue CSRF token")
-	return resp.User
+	require.NoError(f.t, f.userRepo.Create(f.t.Context(), user))
+	token, err := testJWT(supabaseID, email, "0123456789abcdefghijklmnopqrstuvwxyz-secret")
+	require.NoError(f.t, err)
+	f.token = token
+	return *user
 }
 
 func (f *fixture) me() entity.User {
@@ -408,11 +373,11 @@ func (f *fixture) do(method, path string, body any) (int, []byte) {
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
+	if f.token != "" {
+		req.Header.Set("Authorization", "Bearer "+f.token)
+	}
 	if method != http.MethodGet && method != http.MethodHead && method != http.MethodOptions {
 		req.Header.Set("Origin", f.origin)
-		if token := f.csrfToken(); token != "" {
-			req.Header.Set(middleware.CSRFHeaderName, token)
-		}
 	}
 	resp, err := f.client.Do(req)
 	require.NoError(f.t, err)
@@ -422,14 +387,23 @@ func (f *fixture) do(method, path string, body any) (int, []byte) {
 	return resp.StatusCode, data
 }
 
-func (f *fixture) csrfToken() string {
-	f.t.Helper()
-	for _, cookie := range f.client.Jar.Cookies(f.baseHost) {
-		if cookie.Name == middleware.CSRFCookieName {
-			return cookie.Value
-		}
+func testJWT(subject uuid.UUID, email string, secret string) (string, error) {
+	header, err := json.Marshal(map[string]string{"alg": "HS256", "typ": "JWT"})
+	if err != nil {
+		return "", err
 	}
-	return ""
+	payload, err := json.Marshal(map[string]any{
+		"sub":   subject.String(),
+		"email": email,
+		"exp":   time.Now().Add(time.Hour).Unix(),
+	})
+	if err != nil {
+		return "", err
+	}
+	unsigned := base64.RawURLEncoding.EncodeToString(header) + "." + base64.RawURLEncoding.EncodeToString(payload)
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write([]byte(unsigned))
+	return unsigned + "." + base64.RawURLEncoding.EncodeToString(mac.Sum(nil)), nil
 }
 
 func uuidList(values []uuid.UUID) []string {

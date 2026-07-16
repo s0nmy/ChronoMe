@@ -40,3 +40,21 @@ func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*entity.Use
 	}
 	return &user, nil
 }
+
+func (r *UserRepository) GetBySupabaseID(ctx context.Context, supabaseID uuid.UUID) (*entity.User, error) {
+	var user entity.User
+	if err := r.db.WithContext(ctx).First(&user, "supabase_user_id = ?", supabaseID).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) UpdateSupabaseID(ctx context.Context, id uuid.UUID, supabaseID uuid.UUID) error {
+	return r.db.WithContext(ctx).
+		Model(&entity.User{}).
+		Where("id = ?", id).
+		Updates(map[string]any{
+			"supabase_user_id": supabaseID,
+			"is_migrated":      true,
+		}).Error
+}
