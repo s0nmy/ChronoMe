@@ -106,44 +106,54 @@ private struct TimerHomeView: View {
     }
 
     private var timerList: some View {
-        List {
-            userSection
-            workspaceStatusSection
-            recordingDetailsSection
-            timerControlSection
+        ScrollView {
+            VStack(spacing: 24) {
+                activeTimersSection
+                    .padding(.horizontal)
+
+                if feature.timerSessions.count < 5 {
+                    quickStartSection
+                        .padding(.horizontal)
+                }
+            }
+            .padding(.vertical, 20)
         }
     }
 
     private var entriesList: some View {
-        List {
-            displayDateSection
-            entriesSection
-        }
-        .overlay {
-            if feature.selectedDateEntries.isEmpty {
-                ContentUnavailableView(
-                    "選択日の作業記録はありません",
-                    systemImage: "clock",
-                    description: Text("時間記録タブで作業を終了すると記録が保存されます。")
-                )
-                .allowsHitTesting(false)
+        ScrollView {
+            VStack(spacing: 24) {
+                datePickerSection
+                    .padding(.horizontal)
+
+                entriesGridSection
+                    .padding(.horizontal)
             }
+            .padding(.vertical, 20)
         }
     }
 
     private var reportsList: some View {
-        List {
-            displayDateSection
-            dailySummarySection
-        }
+        DailyGanttChartView(
+            entries: feature.selectedDateEntries,
+            projects: feature.projects,
+            selectedDate: Binding(
+                get: { feature.selectedEntryDate },
+                set: { feature.selectedEntryDateChanged($0) }
+            )
+        )
     }
 
     private var managementList: some View {
-        List {
-            userSection
-            workspaceStatusSection
-            projectsSection
-            tagsSection
+        ScrollView {
+            VStack(spacing: 24) {
+                projectsManagementSection
+                    .padding(.horizontal)
+
+                tagsManagementSection
+                    .padding(.horizontal)
+            }
+            .padding(.vertical, 20)
         }
     }
 
@@ -186,24 +196,50 @@ private struct TimerHomeView: View {
         }
     }
 
-    private var displayDateSection: some View {
-        Section("表示日") {
+    // MARK: - 作業履歴セクション
+
+    private var datePickerSection: some View {
+        VStack(spacing: 16) {
             DatePicker(
-                "日付",
+                "",
                 selection: Binding(
                     get: { feature.selectedEntryDate },
                     set: { feature.selectedEntryDateChanged($0) }
                 ),
                 displayedComponents: .date
             )
+            .datePickerStyle(.graphical)
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(.thinMaterial)
+            )
 
-            HStack {
-                Text("選択日の合計")
-                    .foregroundStyle(.secondary)
+            HStack(spacing: 24) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("合計時間")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(durationText(feature.selectedDateTotalSeconds))
+                        .font(.system(.title2, design: .rounded, weight: .semibold))
+                        .monospacedDigit()
+                }
+
                 Spacer()
-                Text(durationText(feature.selectedDateTotalSeconds))
-                    .monospacedDigit()
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("記録数")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("\(feature.selectedDateEntries.count)")
+                        .font(.system(.title2, design: .rounded, weight: .semibold))
+                }
             }
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(.thinMaterial)
+            )
         }
     }
 
@@ -255,177 +291,257 @@ private struct TimerHomeView: View {
         }
     }
 
-    private var recordingDetailsSection: some View {
-        Section("記録内容") {
-            Picker(
-                "プロジェクト",
-                selection: Binding(
-                    get: { feature.selectedProjectID },
-                    set: { feature.projectSelectionChanged($0) }
-                )
-            ) {
-                Text("未選択").tag(String?.none)
-                ForEach(feature.projects.filter { !$0.isArchived }) { project in
-                    Text(project.name).tag(String?.some(project.id))
-                }
-            }
+    // MARK: - 複数タイマー管理セクション
 
-            if feature.tags.isEmpty {
-                Text("選択できるタグはありません")
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(feature.tags) { tag in
-                    Button {
-                        feature.tagSelectionToggled(tag.id)
-                    } label: {
-                        HStack {
-                            Circle()
-                                .fill(Color(hex: tag.color))
-                                .frame(width: 10, height: 10)
-                            Text(tag.name)
-                            Spacer()
-                            if feature.selectedTagIDs.contains(tag.id) {
-                                Image(systemName: "checkmark")
-                                    .foregroundStyle(.tint)
-                            }
-                        }
+    private var activeTimersSection: some View {
+        VStack(spacing: 20) {
+            if !feature.timerSessions.isEmpty {
+                // サマリー表示
+                HStack(spacing: 24) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("実行中")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text("\(feature.timerSessions.count)")
+                            .font(.system(.title, design: .rounded, weight: .semibold))
                     }
-                    .buttonStyle(.plain)
+
+                    Spacer()
+
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("合計時間")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        let totalSeconds = feature.timerSessions.reduce(0) { $0 + $1.currentElapsedSeconds() }
+                        Text(durationText(totalSeconds))
+                            .font(.system(.title2, design: .rounded, weight: .semibold))
+                            .monospacedDigit()
+                    }
+                }
+                .padding(20)
+                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
+
+                // 各タイマーカード
+                ForEach(feature.timerSessions) { session in
+                    TimerSessionCard(
+                        feature: feature,
+                        session: session,
+                        durationText: durationText
+                    )
                 }
             }
-
-            TextField(
-                "メモ",
-                text: Binding(
-                    get: { feature.draftNotes },
-                    set: { feature.draftNotesChanged($0) }
-                ),
-                axis: .vertical
-            )
-            .lineLimit(2...4)
         }
     }
 
-    private var timerControlSection: some View {
-        Section {
-            VStack(spacing: 28) {
-                Image(systemName: feature.isTimerRunning ? "clock.badge.checkmark.fill" : "clock.fill")
-                    .font(.system(size: 72))
+    // MARK: - クイックスタートセクション
+
+    private var quickStartSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Image(systemName: "play.circle.fill")
+                    .font(.title3)
                     .foregroundStyle(.tint)
-                    .accessibilityHidden(true)
+                Text(feature.timerSessions.isEmpty ? "プロジェクトを選んで開始" : "別のタイマーを追加")
+                    .font(.headline)
+            }
 
-                VStack(spacing: 8) {
-                    Text("今日の作業時間")
-                        .font(.headline)
+            let activeProjects = feature.projects.filter { !$0.isArchived }
+
+            if activeProjects.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "folder.badge.plus")
+                        .font(.system(size: 40))
                         .foregroundStyle(.secondary)
-                    Text(durationText(feature.elapsedSeconds))
-                        .font(.system(.largeTitle, design: .rounded, weight: .semibold))
-                        .monospacedDigit()
-                        .accessibilityLabel("今日の作業時間、\(durationAccessibilityText(feature.elapsedSeconds))")
+                    Text("プロジェクトがありません")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text("プロジェクトタブからプロジェクトを作成してください")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .multilineTextAlignment(.center)
                 }
-
-                Button(feature.isTimerRunning ? "作業を終了" : "作業を開始") {
-                    feature.timerButtonTapped()
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 20)
-        }
-        .listRowBackground(Color.clear)
-    }
-
-    private var entriesSection: some View {
-        Section("選択日の作業記録") {
-            if feature.selectedDateEntries.isEmpty {
-                Text("作業記録はありません")
-                    .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 32)
             } else {
-                ForEach(feature.selectedDateEntries) { entry in
-                    Button {
-                        feature.entryTapped(entry)
-                    } label: {
-                        entryRow(entry)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .onDelete { offsets in
-                    for index in offsets {
-                        feature.deleteEntry(feature.selectedDateEntries[index])
-                    }
-                }
-            }
-        }
-    }
-
-    private var projectsSection: some View {
-        Section {
-            if feature.projects.isEmpty {
-                Text("プロジェクトはありません")
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(feature.projects) { project in
-                    Button {
-                        feature.projectTapped(project)
-                    } label: {
-                        HStack(spacing: 12) {
-                            Circle()
-                                .fill(Color(hex: project.color))
-                                .frame(width: 12, height: 12)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(project.name)
-                                if project.isArchived {
-                                    Text("アーカイブ済み")
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
+                    ForEach(activeProjects) { project in
+                        Button {
+                            feature.startTimerSession(
+                                projectID: project.id,
+                                notes: "",
+                                tagIDs: []
+                            )
+                        } label: {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Circle()
+                                        .fill(Color(hex: project.color))
+                                        .frame(width: 12, height: 12)
+                                    Spacer()
+                                    Image(systemName: "play.fill")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
+
+                                Text(project.name)
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(.primary)
+                                    .lineLimit(2)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                             }
+                            .padding(16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color(hex: project.color).opacity(0.1))
+                            )
                         }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
-            }
-        } header: {
-            HStack {
-                Text("プロジェクト")
-                Spacer()
-                Button("追加") {
-                    feature.addProjectButtonTapped()
-                }
-                .font(.caption)
             }
         }
     }
 
-    private var tagsSection: some View {
-        Section {
-            if feature.tags.isEmpty {
-                Text("タグはありません")
-                    .foregroundStyle(.secondary)
+    private var entriesGridSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Image(systemName: "list.bullet.rectangle")
+                    .font(.title3)
+                    .foregroundStyle(.tint)
+                Text("作業記録")
+                    .font(.headline)
+            }
+
+            if feature.selectedDateEntries.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "clock.badge.questionmark")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.secondary)
+                    Text("この日の作業記録はありません")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
             } else {
-                ForEach(feature.tags) { tag in
-                    Button {
-                        feature.tagTapped(tag)
-                    } label: {
-                        HStack(spacing: 10) {
-                            Circle()
-                                .fill(Color(hex: tag.color))
-                                .frame(width: 10, height: 10)
-                            Text(tag.name)
+                VStack(spacing: 12) {
+                    ForEach(feature.selectedDateEntries) { entry in
+                        Button {
+                            feature.entryTapped(entry)
+                        } label: {
+                            EntryCard(entry: entry, durationText: durationText)
                         }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
-        } header: {
+        }
+    }
+
+    // MARK: - プロジェクト・タグ管理セクション
+
+    private var projectsManagementSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("タグ")
+                Image(systemName: "folder.fill")
+                    .font(.title3)
+                    .foregroundStyle(.tint)
+                Text("プロジェクト")
+                    .font(.headline)
                 Spacer()
-                Button("追加") {
-                    feature.addTagButtonTapped()
+                Button {
+                    feature.addProjectButtonTapped()
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title3)
                 }
-                .font(.caption)
+            }
+
+            if feature.projects.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "folder.badge.plus")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.secondary)
+                    Text("プロジェクトがありません")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text("プロジェクトを作成して作業を整理しましょう")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+            } else {
+                VStack(spacing: 12) {
+                    ForEach(feature.projects) { project in
+                        Button {
+                            feature.projectTapped(project)
+                        } label: {
+                            ProjectCard(project: project)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    private var tagsManagementSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Image(systemName: "tag.fill")
+                    .font(.title3)
+                    .foregroundStyle(.tint)
+                Text("タグ")
+                    .font(.headline)
+                Spacer()
+                Button {
+                    feature.addTagButtonTapped()
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title3)
+                }
+            }
+
+            if feature.tags.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "tag.slash")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.secondary)
+                    Text("タグがありません")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text("タグを作成して作業を分類しましょう")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+            } else {
+                FlowLayout(spacing: 12, lineSpacing: 12) {
+                    ForEach(feature.tags) { tag in
+                        Button {
+                            feature.tagTapped(tag)
+                        } label: {
+                            HStack(spacing: 8) {
+                                Circle()
+                                    .fill(Color(hex: tag.color))
+                                    .frame(width: 10, height: 10)
+                                Text(tag.name)
+                                    .font(.subheadline)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(Color(hex: tag.color).opacity(0.1))
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
             }
         }
     }
@@ -503,6 +619,281 @@ private struct TimerHomeView: View {
         let minutes = (elapsedSeconds % 3_600) / 60
         let seconds = elapsedSeconds % 60
         return "\(hours)時間\(minutes)分\(seconds)秒"
+    }
+}
+
+private struct ProjectCard: View {
+    let project: Project
+
+    var body: some View {
+        HStack(spacing: 16) {
+            Circle()
+                .fill(Color(hex: project.color))
+                .frame(width: 16, height: 16)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(project.name)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+
+                if let description = project.description, !description.isEmpty {
+                    Text(description)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                if project.isArchived {
+                    HStack(spacing: 4) {
+                        Image(systemName: "archivebox.fill")
+                            .font(.caption2)
+                        Text("アーカイブ済み")
+                            .font(.caption2.weight(.medium))
+                    }
+                    .foregroundStyle(.orange)
+                }
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(hex: project.color).opacity(0.08))
+        )
+    }
+}
+
+private struct EntryCard: View {
+    let entry: TimeEntryRecord
+    let durationText: (Int) -> String
+
+    var body: some View {
+        HStack(spacing: 16) {
+            // プロジェクトカラーバー
+            RoundedRectangle(cornerRadius: 3)
+                .fill(Color.gray)
+                .frame(width: 4)
+
+            VStack(alignment: .leading, spacing: 8) {
+                // タイトルと時間
+                HStack {
+                    Text(entry.title)
+                        .font(.subheadline.weight(.medium))
+                    Spacer()
+                    Text(durationText(entry.durationSeconds))
+                        .font(.subheadline.weight(.semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+
+                // 時刻表示
+                HStack(spacing: 4) {
+                    Image(systemName: "clock")
+                        .font(.caption2)
+                    Text("\(entry.startedAt.formatted(date: .omitted, time: .shortened)) - \(entry.endedAt.formatted(date: .omitted, time: .shortened))")
+                        .font(.caption)
+                }
+                .foregroundStyle(.secondary)
+
+                // プロジェクト名とタグ
+                if let projectName = entry.projectName {
+                    HStack(spacing: 4) {
+                        Image(systemName: "folder")
+                            .font(.caption2)
+                        Text(projectName)
+                            .font(.caption)
+                    }
+                    .foregroundStyle(.secondary)
+                }
+
+                // 同期ステータス
+                if entry.syncStatus != "synced" {
+                    HStack(spacing: 4) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.caption2)
+                        Text("未同期")
+                            .font(.caption2.weight(.medium))
+                    }
+                    .foregroundStyle(.orange)
+                }
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.gray.opacity(0.08))
+        )
+    }
+}
+
+private struct TimerSessionCard: View {
+    @ObservedObject var feature: AppFeature
+    let session: TimerSession
+    let durationText: (Int) -> String
+
+    @State private var editedNotes: String
+    @State private var showingDetails = false
+
+    init(feature: AppFeature, session: TimerSession, durationText: @escaping (Int) -> String) {
+        self.feature = feature
+        self.session = session
+        self.durationText = durationText
+        self._editedNotes = State(initialValue: session.notes)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // メインカード
+            VStack(spacing: 16) {
+                // 経過時間（大きく表示）
+                VStack(spacing: 8) {
+                    Text(durationText(session.currentElapsedSeconds()))
+                        .font(.system(size: 48, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(
+                            session.isPaused ? .secondary : Color(hex: projectColor)
+                        )
+
+                    if session.isPaused {
+                        HStack(spacing: 4) {
+                            Image(systemName: "pause.circle.fill")
+                                .font(.caption)
+                            Text("一時停止中")
+                                .font(.caption.weight(.medium))
+                        }
+                        .foregroundStyle(.orange)
+                    }
+                }
+
+                // プロジェクト名
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(Color(hex: projectColor))
+                        .frame(width: 10, height: 10)
+                    Text(projectName)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+                }
+
+                // コントロールボタン
+                HStack(spacing: 12) {
+                    // 一時停止/再開
+                    Button {
+                        if session.isPaused {
+                            feature.resumeTimerSession(session.id)
+                        } else {
+                            feature.pauseTimerSession(session.id)
+                        }
+                    } label: {
+                        Image(systemName: session.isPaused ? "play.fill" : "pause.fill")
+                            .font(.title3)
+                            .frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.primary)
+
+                    // 休憩トグル
+                    Button {
+                        feature.updateTimerSession(session.id, notes: nil, tagIDs: nil, isBreak: !session.isBreak)
+                    } label: {
+                        Image(systemName: session.isBreak ? "cup.and.saucer.fill" : "briefcase.fill")
+                            .font(.title3)
+                            .frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(session.isBreak ? .orange : .blue)
+
+                    Spacer()
+
+                    // 詳細トグル
+                    Button {
+                        withAnimation(.spring(response: 0.3)) {
+                            showingDetails.toggle()
+                        }
+                    } label: {
+                        Image(systemName: showingDetails ? "chevron.up" : "chevron.down")
+                            .font(.title3)
+                            .frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(.bordered)
+
+                    // 終了ボタン
+                    Button {
+                        feature.stopTimerSession(session.id)
+                    } label: {
+                        Image(systemName: "stop.fill")
+                            .font(.title3)
+                            .frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
+                }
+            }
+            .padding(24)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(hex: projectColor).opacity(0.08))
+            )
+
+            // 詳細セクション（展開可能）
+            if showingDetails {
+                VStack(alignment: .leading, spacing: 16) {
+                    Divider()
+                        .padding(.vertical, 8)
+
+                    // メモ
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("メモ")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        TextField("メモを入力", text: Binding(
+                            get: { editedNotes },
+                            set: { newValue in
+                                editedNotes = newValue
+                                feature.updateTimerSession(session.id, notes: newValue, tagIDs: nil, isBreak: nil)
+                            }
+                        ), axis: .vertical)
+                        .textFieldStyle(.roundedBorder)
+                        .lineLimit(2...4)
+                    }
+
+                    // 開始時刻
+                    HStack {
+                        Text("開始時刻")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text(session.startedAt.formatted(date: .omitted, time: .shortened))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 20)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+    }
+
+    private var projectName: String {
+        if let projectID = session.projectID,
+           let project = feature.projects.first(where: { $0.id == projectID }) {
+            return project.name
+        }
+        return "未分類"
+    }
+
+    private var projectColor: String {
+        if let projectID = session.projectID,
+           let project = feature.projects.first(where: { $0.id == projectID }) {
+            return project.color
+        }
+        return "#94A3B8"
     }
 }
 
@@ -780,6 +1171,8 @@ private struct TagEditView: View {
     let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(
         for: TimeEntryRecord.self,
+        ProjectRecord.self,
+        TagRecord.self,
         configurations: configuration
     )
         ContentView(

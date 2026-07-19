@@ -23,6 +23,13 @@
 		B10000000000000000000011 /* TagClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000011 /* TagClient.swift */; };
 		B10000000000000000000012 /* Entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000012 /* Entry.swift */; };
 		B10000000000000000000013 /* EntryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000013 /* EntryClient.swift */; };
+		B10000000000000000000014 /* TimerSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000014 /* TimerSession.swift */; };
+		B10000000000000000000015 /* GanttBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000015 /* GanttBlock.swift */; };
+		B10000000000000000000016 /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000016 /* Date+Extensions.swift */; };
+		B10000000000000000000017 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000017 /* FlowLayout.swift */; };
+		B10000000000000000000018 /* DailyGanttChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000018 /* DailyGanttChartView.swift */; };
+		B10000000000000000000019 /* WorkspaceRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000019 /* WorkspaceRecord.swift */; };
+		B1000000000000000000001A /* WorkspaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000001A /* WorkspaceStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,6 +62,13 @@
 		C10000000000000000000011 /* TagClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagClient.swift; sourceTree = "<group>"; };
 		C10000000000000000000012 /* Entry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entry.swift; sourceTree = "<group>"; };
 		C10000000000000000000013 /* EntryClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryClient.swift; sourceTree = "<group>"; };
+		C10000000000000000000014 /* TimerSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerSession.swift; sourceTree = "<group>"; };
+		C10000000000000000000015 /* GanttBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GanttBlock.swift; sourceTree = "<group>"; };
+		C10000000000000000000016 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
+		C10000000000000000000017 /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
+		C10000000000000000000018 /* DailyGanttChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyGanttChartView.swift; sourceTree = "<group>"; };
+		C10000000000000000000019 /* WorkspaceRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceRecord.swift; sourceTree = "<group>"; };
+		C1000000000000000000001A /* WorkspaceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,6 +103,8 @@
 				E20000000000000000000011 /* Features */,
 				E20000000000000000000008 /* Models */,
 				E20000000000000000000009 /* Infrastructure */,
+				E20000000000000000000014 /* Extensions */,
+				E20000000000000000000015 /* Views */,
 				E20000000000000000000004 /* Resources */,
 			);
 			path = ChronoMe;
@@ -124,7 +140,7 @@
 		};
 		E20000000000000000000008 /* Models */ = {
 			isa = PBXGroup;
-			children = (C10000000000000000000008 /* TimeEntryRecord.swift */, C1000000000000000000000E /* Project.swift */, C1000000000000000000000F /* Tag.swift */, C10000000000000000000012 /* Entry.swift */,);
+			children = (C10000000000000000000008 /* TimeEntryRecord.swift */, C10000000000000000000019 /* WorkspaceRecord.swift */, C1000000000000000000000E /* Project.swift */, C1000000000000000000000F /* Tag.swift */, C10000000000000000000012 /* Entry.swift */, C10000000000000000000014 /* TimerSession.swift */, C10000000000000000000015 /* GanttBlock.swift */,);
 			path = Models;
 			sourceTree = "<group>";
 		};
@@ -136,7 +152,7 @@
 		};
 		E20000000000000000000010 /* Database */ = {
 			isa = PBXGroup;
-			children = (C10000000000000000000009 /* TimeEntryStore.swift */,);
+			children = (C10000000000000000000009 /* TimeEntryStore.swift */, C1000000000000000000001A /* WorkspaceStore.swift */,);
 			path = Database;
 			sourceTree = "<group>";
 		};
@@ -156,6 +172,24 @@
 			isa = PBXGroup;
 			children = (C1000000000000000000000C /* LoginView.swift */,);
 			path = Auth;
+			sourceTree = "<group>";
+		};
+		E20000000000000000000014 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (C10000000000000000000016 /* Date+Extensions.swift */,);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		E20000000000000000000015 /* Views */ = {
+			isa = PBXGroup;
+			children = (E20000000000000000000016 /* Components */,);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		E20000000000000000000016 /* Components */ = {
+			isa = PBXGroup;
+			children = (C10000000000000000000017 /* FlowLayout.swift */, C10000000000000000000018 /* DailyGanttChartView.swift */,);
+			path = Components;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -237,7 +271,14 @@
 				B10000000000000000000011 /* TagClient.swift in Sources */,
 				B10000000000000000000012 /* Entry.swift in Sources */,
 				B10000000000000000000013 /* EntryClient.swift in Sources */,
-			);
+					B10000000000000000000014 /* TimerSession.swift in Sources */,
+					B10000000000000000000015 /* GanttBlock.swift in Sources */,
+					B10000000000000000000016 /* Date+Extensions.swift in Sources */,
+					B10000000000000000000017 /* FlowLayout.swift in Sources */,
+					B10000000000000000000018 /* DailyGanttChartView.swift in Sources */,
+					B10000000000000000000019 /* WorkspaceRecord.swift in Sources */,
+					B1000000000000000000001A /* WorkspaceStore.swift in Sources */,
+				);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		A30000000000000000000002 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (B10000000000000000000005 /* AppFeatureTests.swift in Sources */, B1000000000000000000000D /* APIClientTests.swift in Sources */,); runOnlyForDeploymentPostprocessing = 0; };

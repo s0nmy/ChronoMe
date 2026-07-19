@@ -17,6 +17,7 @@ ChronoMeは個人向けタイムカードWebアプリケーションです。本
 
 - **[TechStack.md](TechStack.md)** - iOS技術スタックの選定と理由
 - **[Architecture.md](Architecture.md)** - アーキテクチャ設計とレイヤー構成
+- **[CurrentArchitecture.md](CurrentArchitecture.md)** - 現在のiOS実装に基づくアーキテクチャとデータフロー
 - **[FeatureParity.md](FeatureParity.md)** - Web版との機能対応表
 - **[PhasesPlan.md](PhasesPlan.md)** - 段階的な実装計画とマイルストーン
 

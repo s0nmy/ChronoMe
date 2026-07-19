@@ -4,7 +4,7 @@ import XCTest
 
 @MainActor
 final class AppFeatureTests: XCTestCase {
-    func testTimerStartsTicksAndStops() async throws {
+    func testTimerSessionStartsAndStops() async throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
             for: TimeEntryRecord.self,
@@ -19,17 +19,17 @@ final class AppFeatureTests: XCTestCase {
             entryClient: MockEntryClient()
         )
 
-        feature.timerButtonTapped()
-        XCTAssertTrue(feature.isTimerRunning)
+        feature.startTimerSession(projectID: nil, notes: "", tagIDs: [])
+        XCTAssertEqual(feature.timerSessions.count, 1)
 
-        feature.timerTicked()
-        XCTAssertEqual(feature.elapsedSeconds, 1)
+        try await Task.sleep(nanoseconds: 1_100_000_000)
 
-        feature.timerButtonTapped()
+        let sessionID = try XCTUnwrap(feature.timerSessions.first?.id)
+        feature.stopTimerSession(sessionID)
         try await waitForRecentEntries(in: feature)
-        XCTAssertFalse(feature.isTimerRunning)
+        XCTAssertTrue(feature.timerSessions.isEmpty)
         XCTAssertEqual(feature.recentEntries.count, 1)
-        XCTAssertEqual(feature.recentEntries.first?.durationSeconds, 1)
+        XCTAssertGreaterThanOrEqual(feature.recentEntries.first?.durationSeconds ?? 0, 1)
         XCTAssertEqual(feature.recentEntries.first?.syncStatus, "synced")
     }
 
