@@ -12,7 +12,32 @@ Go 製バックエンドと React + TypeScript フロントエンドで構成し
 
 ## 使い方
 
-ローカル開発では以下を実行します。
+### Supabase 認証の設定
+
+認証済み API を利用するには Supabase プロジェクトが必要です。`.env.example` を
+`.env` としてコピーし、プロジェクト URL、anon key、JWT signing secret を設定します。
+
+```bash
+cp .env.example .env
+# .env 内の your-* を Supabase Dashboard の値に置き換える
+set -a; source .env; set +a
+```
+
+`VITE_SUPABASE_URL` と `VITE_SUPABASE_ANON_KEY` はフロントエンドの起動時に必須です。
+`SUPABASE_JWT_SECRET` はバックエンドが Bearer トークンを検証するために必須です。値が
+未設定の場合、バックエンドは起動を停止します。
+
+Supabase Dashboard では、開発用の Site URL を `http://localhost:3000`、Redirect URL を
+`http://localhost:3000/auth/callback` に設定してください。メール確認を有効にするかどうかは
+運用方針として決定し、OAuth プロバイダーごとの Redirect URL も同じ画面で登録します。
+
+既存の Cookie 認証アカウントは、メールアドレスだけでは Supabase アカウントへ自動移行
+されません。アカウント乗っ取りを防ぐため、明示的な連携・復旧フローを提供するまで既存
+アカウントへのログインは拒否されます。
+
+### ローカル開発
+
+環境変数を読み込んだ状態で以下を実行します。
 
 ```bash
 make dev
