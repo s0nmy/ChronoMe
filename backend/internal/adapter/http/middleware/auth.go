@@ -71,11 +71,10 @@ func resolveSupabaseUser(ctx context.Context, users repository.UserRepository, s
 	user, err = users.GetByEmail(ctx, email)
 	if err == nil {
 		if user.SupabaseUserID == nil {
-			if updateErr := users.UpdateSupabaseID(ctx, user.ID, supabaseID); updateErr != nil {
-				return nil, updateErr
-			}
-			user.SupabaseUserID = &supabaseID
-			user.IsMigrated = true
+			return nil, errors.New("existing account requires explicit Supabase linking")
+		}
+		if *user.SupabaseUserID != supabaseID {
+			return nil, errors.New("supabase user id does not match the linked account")
 		}
 		return user, nil
 	}
@@ -85,6 +84,7 @@ func resolveSupabaseUser(ctx context.Context, users repository.UserRepository, s
 	} else if rawName, ok := claims.UserMetadata["name"].(string); ok {
 		displayName = rawName
 	}
+	displayName = truncateDisplayName(displayName)
 	user = &entity.User{
 		ID:             uuid.New(),
 		Email:          email,
@@ -102,6 +102,22 @@ func resolveSupabaseUser(ctx context.Context, users repository.UserRepository, s
 		return nil, err
 	}
 	return user, nil
+}
+
+func truncateDisplayName(name string) string {
+	name = strings.TrimSpace(name)
+	if len(name) <= 50 {
+		return name
+	}
+	var truncated strings.Builder
+	truncated.Grow(50)
+	for _, r := range name {
+		if truncated.Len()+len(string(r)) > 50 {
+			break
+		}
+		truncated.WriteRune(r)
+	}
+	return truncated.String()
 }
 
 // RequireAuth は認証ユーザーがない場合にリクエストを止める。
