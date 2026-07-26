@@ -53,7 +53,10 @@ func TestChronoMeEndToEnd(t *testing.T) {
 	require.Equal(t, "Deep Focus", tags[0].Name)
 	require.Equal(t, "#F97316", tags[0].Color)
 
-	start := time.Now().UTC().Add(-2 * time.Hour).Truncate(time.Second)
+	// 現在時刻を基準にすると日曜日は2件目が翌週へはみ出すため、
+	// 常に当週の月曜午前から開始して週次集計の対象を安定させる。
+	currentWeekStart := mondayOf(time.Now().UTC())
+	start := currentWeekStart.Add(10 * time.Hour)
 	end := start.Add(90 * time.Minute)
 
 	logStep(t, "creating primary entry at %s", start.Format(time.RFC3339))
