@@ -7,7 +7,7 @@
 
 ## 1. 目的と前提
 - ChronoMe（一人用タイムカード Web アプリ）の永続化層仕様を定義する。  
-- バックエンドは Go（GORM）を想定し、マイグレーションは `golang-migrate` で管理する。  
+- バックエンドは Go（GORM）を想定し、スキーマ変更は起動時の `AutoMigrate` で管理する。
 - 作業時間やレポート機能に必要な主テーブルと制約・インデックス方針を示す。  
 - ここで定義した仕様は [DesignDoc.md](../product/DesignDoc.md) および [APIDesign.md](APIDesign.md) の上位設計と整合する。
 

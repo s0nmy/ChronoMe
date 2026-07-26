@@ -35,6 +35,10 @@ Supabase Dashboard では、開発用の Site URL を `http://localhost:3000`、
 されません。アカウント乗っ取りを防ぐため、明示的な連携・復旧フローを提供するまで既存
 アカウントへのログインは拒否されます。
 
+iOS は Xcode の ChronoMe target に `SUPABASE_URL` と `SUPABASE_ANON_KEY` の build setting を
+設定してください。これらは生成される Info.plist にだけ渡し、service role key や JWT secret は
+iOS アプリへ含めません。
+
 ### ローカル開発
 
 環境変数を読み込んだ状態で以下を実行します。

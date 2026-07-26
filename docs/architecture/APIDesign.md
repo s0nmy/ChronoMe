@@ -25,9 +25,9 @@
 ---
 
 ## 2. 認証・認可
-- **方式**: サインド Cookie ベースのセッション。ログイン時にユーザーIDと有効期限を含むトークンを生成し、HMAC-SHA256 で署名した Cookie を発行する（サーバー側に状態は保持しない）。
-- **セッション寿命**: 12 時間。延長処理は設けず、期限切れ後は再ログインで対応する。
-- **CSRF 対策**: `SameSite=Lax` の Cookie 設定を採用し、状態変更エンドポイントでは `POST/PUT/PATCH/DELETE` のみを使用する。
+- **方式**: Supabase Auth が発行する Bearer JWT。クライアントは `Authorization: Bearer <access_token>` を送信し、バックエンドは `SUPABASE_JWT_SECRET` で HS256 署名と有効期限を検証する。
+- **セッション寿命**: Supabase のセッション設定に従う。クライアントは Supabase SDK による更新済み access token を送信する。
+- **CSRF 対策**: Cookie 認証を使用しないため不要。CORS では `Authorization` ヘッダーを許可する。
 - **認可**: リクエストが保持するセッションのユーザー ID と一致するデータのみ操作可能。Usecase 層で所有者チェックを行う。
 
 ---
@@ -137,7 +137,7 @@
 
 ### 5.1 認証
 
-#### POST /api/auth/signup
+#### POST /api/auth/signup（廃止）
 - **概要**: 新規ユーザー登録
 - **認証**: 不要
 - **リクエスト**
@@ -162,7 +162,7 @@
   - `409 Conflict`: 既存メール
   - `422 Unprocessable Entity`: バリデーション失敗
 
-#### POST /api/auth/login
+#### POST /api/auth/login（廃止）
 - **概要**: ログインしセッション発行
 - **リクエスト**
 ```json
@@ -177,13 +177,14 @@
 - Cookie に `chronome_session`、ヘッダ `Set-Cookie: HttpOnly; Secure; SameSite=Lax`
 - **エラー**: `401 Unauthorized` (`AUTH_INVALID_CREDENTIALS`)
 
-#### POST /api/auth/logout
+#### POST /api/auth/logout（廃止）
 - **概要**: セッション破棄
 - **認証**: 必須
 - **レスポンス**: `204 No Content`
 
 #### GET /api/auth/me
 - **概要**: 現在のユーザー情報取得
+- **認証**: 必須。`Authorization: Bearer <Supabase access token>`
 - **レスポンス `200 OK`**
 ```json
 { "user": { ...User } }

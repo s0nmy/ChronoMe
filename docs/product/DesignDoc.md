@@ -9,7 +9,7 @@
   - フロントエンド：React + TypeScript  
   - バックエンド：Go（**クリーンアーキテクチャ + GORM + SQLite**）  
   - データベース：SQLite（初期開発） / PostgreSQL（スケール時移行）  
-  - 認証：サインド Cookie ベースのセッション  
+  - 認証：Supabase Auth の Bearer JWT
   - デプロイ対象：ローカル環境（手動実行）
 
 ---
@@ -190,12 +190,12 @@ erDiagram
 
 | 項目 | 内容 |
 |------|------|
-| 認証方式 | サインド Cookie ベースのシンプルなセッション |
-| トークン保存 | ブラウザの Cookie（HttpOnly, Secure / SameSite=Lax） |
-| 暗号化 | bcrypt によるパスワードハッシュ化 |
+| 認証方式 | Supabase Auth が発行する Bearer JWT |
+| トークン保存 | Web は Supabase SDK のセッション、iOS は Supabase 認証クライアントのセッション |
+| 暗号化 | Supabase Auth が認証情報を管理し、バックエンドは JWT 署名を検証 |
 | 通信 | HTTPS 前提（開発では http://localhost） |
-| セッション管理 | ユーザーIDと失効時刻を HMAC-SHA256 で署名した Cookie に格納（サーバー側ストレージ不要） |
-| CSRF 対策 | SameSite=Lax 設定で最小限対応 |
+| セッション管理 | Supabase の access token を更新して利用 |
+| CSRF 対策 | Bearer 認証のため不要 |
 | CORS 対策 | 開発時のみ localhost:5173 を許可 |
 | パスワードポリシー | 最小8文字、英数字混在（基本的な要件のみ） |
 
@@ -212,10 +212,8 @@ RESTful API を採用し、JSON でデータを送受信します。
 
 | 区分 | メソッド | パス | 概要 | 認証 |
 |------|-----------|------|------|------|
-| Auth | POST | /api/auth/signup | 新規登録 | 不要 |
-| Auth | POST | /api/auth/login | ログイン | 不要 |
-| Auth | POST | /api/auth/logout | ログアウト | 必須 |
-| Auth | GET  | /api/auth/me | ログイン中ユーザー情報取得 | 必須 |
+| Auth | Supabase Auth | - | 新規登録・ログイン・ログアウト | Supabase SDK |
+| Auth | GET  | /api/auth/me | ログイン中ユーザー情報取得 | Bearer JWT |
 | Projects | GET, POST, PATCH, DELETE | /api/projects | プロジェクトCRUD | 必須 |
 | Entries | GET, POST, PATCH, DELETE | /api/entries | 作業記録CRUD | 必須 |
 | Entries | POST | /api/entries/start | 作業開始 | 必須 |
