@@ -44,6 +44,7 @@ final class APIClient {
     private let cookieStorage: HTTPCookieStorage
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
+    private var accessTokenProvider: (() async -> String?)?
 
     init(
         baseURL: URL = URL(string: "http://localhost:8080")!,
@@ -75,6 +76,10 @@ final class APIClient {
         self.decoder = decoder
     }
 
+    func setAccessTokenProvider(_ provider: @escaping () async -> String?) {
+        accessTokenProvider = provider
+    }
+
     func request<Response: Decodable>(
         _ path: String,
         method: HTTPMethod = .get,
@@ -86,12 +91,17 @@ final class APIClient {
         request.httpMethod = method.rawValue
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
+        let accessToken = await accessTokenProvider?()
+        if let accessToken {
+            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        }
+
         if let body {
             request.httpBody = try encoder.encode(AnyEncodable(body))
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
 
-        if requiresCSRF ?? method.requiresCSRF {
+        if accessToken == nil, requiresCSRF ?? method.requiresCSRF {
             guard let token = csrfToken(for: url) else {
                 throw APIClientError.missingCSRFToken
             }

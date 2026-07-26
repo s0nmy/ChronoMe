@@ -11,6 +11,7 @@ struct ChronoMeApp: App {
             let container = try ModelContainer(for: TimeEntryRecord.self)
             let apiClient = APIClient()
             let authClient = AuthClient(apiClient: apiClient)
+            apiClient.setAccessTokenProvider { await authClient.accessToken() }
             let projectClient = ProjectClient(apiClient: apiClient)
             let tagClient = TagClient(apiClient: apiClient)
             let entryClient = EntryClient(apiClient: apiClient)
