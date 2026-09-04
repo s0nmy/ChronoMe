@@ -17,6 +17,17 @@ import (
 	"chronome/internal/usecase"
 )
 
+const (
+	// リクエストの読み書きが滞った接続を握り続けないための上限。
+	readHeaderTimeout = 5 * time.Second
+	readTimeout       = 15 * time.Second
+	writeTimeout      = 30 * time.Second
+	idleTimeout       = 60 * time.Second
+
+	// SIGINT/SIGTERM 受信後に処理中の request を待つ時間。
+	shutdownTimeout = 5 * time.Second
+)
+
 func main() {
 	// 設定は環境変数から集約し、以降の層には Config として渡す。
 	cfg := config.Load()
@@ -56,8 +67,12 @@ func main() {
 
 	// HTTP サーバーは chi ルーターを入口にし、各 request を handler -> usecase へ流す。
 	srv := &http.Server{
-		Addr:    cfg.Address,
-		Handler: apiHandler.Router(),
+		Addr:              cfg.Address,
+		Handler:           apiHandler.Router(),
+		ReadHeaderTimeout: readHeaderTimeout,
+		ReadTimeout:       readTimeout,
+		WriteTimeout:      writeTimeout,
+		IdleTimeout:       idleTimeout,
 	}
 
 	go func() {
@@ -72,7 +87,7 @@ func main() {
 	<-shutdown
 
 	// SIGINT/SIGTERM 受信時は処理中の request を短時間待ってから終了する。
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Printf("graceful shutdown failed: %v", err)
