@@ -15,7 +15,6 @@ enum HTTPMethod: String {
 
 enum APIClientError: LocalizedError, Equatable {
     case invalidURL(String)
-    case missingCSRFToken
     case invalidResponse
     case httpStatus(Int, String)
     case decodingFailed
@@ -24,8 +23,6 @@ enum APIClientError: LocalizedError, Equatable {
         switch self {
         case let .invalidURL(path):
             return "Invalid API path: \(path)"
-        case .missingCSRFToken:
-            return "CSRF token is missing. Please log in again."
         case .invalidResponse:
             return "Invalid server response."
         case let .httpStatus(status, message):
@@ -41,28 +38,16 @@ struct EmptyResponse: Decodable, Equatable {}
 final class APIClient {
     private let baseURL: URL
     private let session: URLSessionProtocol
-    private let cookieStorage: HTTPCookieStorage
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
     private var accessTokenProvider: (() async -> String?)?
 
     init(
         baseURL: URL = URL(string: "http://localhost:8080")!,
-        session: URLSessionProtocol? = nil,
-        cookieStorage: HTTPCookieStorage = .shared
+        session: URLSessionProtocol? = nil
     ) {
         self.baseURL = baseURL
-        self.cookieStorage = cookieStorage
-
-        if let session {
-            self.session = session
-        } else {
-            let configuration = URLSessionConfiguration.default
-            configuration.httpCookieStorage = cookieStorage
-            configuration.httpCookieAcceptPolicy = .always
-            configuration.httpShouldSetCookies = true
-            self.session = URLSession(configuration: configuration)
-        }
+        self.session = session ?? URLSession(configuration: .default)
 
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
@@ -83,8 +68,7 @@ final class APIClient {
     func request<Response: Decodable>(
         _ path: String,
         method: HTTPMethod = .get,
-        body: Encodable? = nil,
-        requiresCSRF: Bool? = nil
+        body: Encodable? = nil
     ) async throws -> Response {
         let url = try makeURL(path: path)
         var request = URLRequest(url: url)
@@ -99,13 +83,6 @@ final class APIClient {
         if let body {
             request.httpBody = try encoder.encode(AnyEncodable(body))
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        }
-
-        if accessToken == nil, requiresCSRF ?? method.requiresCSRF {
-            guard let token = csrfToken(for: url) else {
-                throw APIClientError.missingCSRFToken
-            }
-            request.setValue(token, forHTTPHeaderField: "X-CSRF-Token")
         }
 
         let (data, response) = try await session.data(for: request)
@@ -136,12 +113,6 @@ final class APIClient {
             throw APIClientError.invalidURL(path)
         }
         return url
-    }
-
-    private func csrfToken(for url: URL) -> String? {
-        cookieStorage.cookies(for: url)?
-            .first { $0.name == "chronome_csrf" }?
-            .value
     }
 
     private func parseErrorMessage(from data: Data) -> String? {
@@ -183,17 +154,6 @@ final class APIClient {
             in: container,
             debugDescription: "Invalid ISO8601 date: \(value)"
         )
-    }
-}
-
-private extension HTTPMethod {
-    var requiresCSRF: Bool {
-        switch self {
-        case .get:
-            return false
-        case .post, .patch, .delete:
-            return true
-        }
     }
 }
 

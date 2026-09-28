@@ -85,6 +85,15 @@ func resolveSupabaseUser(ctx context.Context, users repository.UserRepository, s
 		displayName = rawName
 	}
 	displayName = truncateDisplayName(displayName)
+	timeZone := "UTC"
+	if rawTimeZone, ok := claims.UserMetadata["time_zone"].(string); ok {
+		candidate := strings.TrimSpace(rawTimeZone)
+		if candidate != "" {
+			if _, err := time.LoadLocation(candidate); err == nil {
+				timeZone = candidate
+			}
+		}
+	}
 	user = &entity.User{
 		ID:             uuid.New(),
 		Email:          email,
@@ -92,7 +101,7 @@ func resolveSupabaseUser(ctx context.Context, users repository.UserRepository, s
 		SupabaseUserID: &supabaseID,
 		IsMigrated:     true,
 		DisplayName:    displayName,
-		TimeZone:       "UTC",
+		TimeZone:       timeZone,
 	}
 	user.Normalize()
 	if err := user.Validate(); err != nil {

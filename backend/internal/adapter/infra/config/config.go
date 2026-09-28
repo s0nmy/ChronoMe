@@ -1,7 +1,9 @@
 package config
 
 import (
+	"errors"
 	"os"
+	"strings"
 )
 
 // Config は環境変数から読み込む実行時設定をまとめる。
@@ -41,6 +43,19 @@ func getEnv(key, fallback string) string {
 		return val
 	}
 	return fallback
+}
+
+// Validate は起動に必要なSupabase設定を検証する。
+// プレースホルダーを通して起動すると、全APIが401になるため明示的に失敗させる。
+func (c Config) Validate() error {
+	secret := strings.TrimSpace(c.SupabaseJWTSecret)
+	if secret == "" {
+		return errors.New("SUPABASE_JWT_SECRET must be provided")
+	}
+	if c.Environment != "test" && secret == "your-jwt-signing-secret" {
+		return errors.New("SUPABASE_JWT_SECRET must be replaced with the Supabase JWT signing secret")
+	}
+	return nil
 }
 
 // DefaultProjectColor は新規プロジェクト用のデフォルト色を返す。

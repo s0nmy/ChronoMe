@@ -20,8 +20,8 @@ func main() {
 	// 設定は環境変数から集約し、以降の層には Config として渡す。
 	cfg := config.Load()
 
-	if cfg.SupabaseJWTSecret == "" {
-		log.Fatal("SUPABASE_JWT_SECRET must be provided")
+	if err := cfg.Validate(); err != nil {
+		log.Fatal(err)
 	}
 
 	db, err := openDatabaseWithRetry(cfg)

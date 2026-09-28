@@ -64,12 +64,12 @@ ChronoMe バックエンドはクリーンアーキテクチャを採用し、�
 | フロント | React + TypeScript | Vite を利用した SPA |
 | ルーティング | **Chi** | 軽量HTTPルータ |
 | ORM / DB | **GORM + SQLite（初期） / PostgreSQL（移行時）** | SQLite を既定にし、DSN 切替で PostgreSQL 対応 |
-| マイグレーション | 手動スクリプト（必要に応じて `golang-migrate`） | 学習段階では SQL スクリプトを直接適用 |
+| マイグレーション | GORM AutoMigrate | 起動時にエンティティ定義から適用 |
 | 状態管理 | TanStack Query | API通信・キャッシュ管理 |
 | テスト | `go test` / React Testing Library | ユニット + 最小限の統合テスト |
 | DI | コンストラクタ注入 | 複雑なコンテナは使用しない |
 | 開発環境 | Go / npm のローカル実行 | Docker なしで構築 |
-| 認証 | サインド Cookie ベースのセッション | 学習用に簡素化 |
+| 認証 | Supabase Auth Bearer JWT | WebはSDK、iOSはKeychainでセッションを保持 |
 
 ---
 
@@ -84,7 +84,7 @@ backend/
  │   └── adapter/
  │       ├── http/handler,middleware
  │       ├── db/gormrepo        // GORM 実装
- │       └── infra/             // config, session, database, time など
+ │       └── infra/             // config, database, time など
  ├── test/fakes/                // フェイク Repository / Clock
  └── go.mod / go.sum
 
@@ -322,7 +322,7 @@ TEST_DATABASE_URL=postgres://chronome_test:chronome_test@localhost:5433/chronome
 ```
 
 ### 代表シナリオ（E2E）
-1) **Auth**：signup → login → me（不正認証は 401）  
+1) **Auth**：Supabase signup/login → Bearer tokenで`/api/auth/me`（不正認証は401）
 2) **Entries**：start → stop → list（未終了があれば自動終了）  
 3) **Reports**：`GET /reports/daily` で日次集計取得（UTC保存／JST表示の簡易確認）
 
@@ -337,7 +337,7 @@ TEST_DATABASE_URL=postgres://chronome_test:chronome_test@localhost:5433/chronome
 3. `cd frontend && npm install`
 4. バックエンド: `go run ./cmd/server`
 5. フロントエンド: `npm run dev`
-6. SQLite の場合は初回起動時に `dev.db` が自動生成される。PostgreSQL で運用する際は `backend/migrations` の SQL を適用する。
+6. SQLite / PostgreSQLとも、初回起動時にGORM AutoMigrateがエンティティ定義からスキーマを適用する。
 
 ---
 

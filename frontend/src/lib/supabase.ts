@@ -3,7 +3,10 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
+const isPlaceholder = (value: unknown): boolean =>
+  typeof value !== 'string' || value.trim() === '' || value.includes('your-project') || value.includes('your-anon-key');
+
+if (isPlaceholder(supabaseUrl) || isPlaceholder(supabaseAnonKey)) {
   throw new Error('VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are required.');
 }
 

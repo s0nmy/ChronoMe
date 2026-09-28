@@ -24,8 +24,9 @@ recording run locally without calling the backend API.
 
 When authentication is enabled again, the app restores an existing session with
 `GET /api/auth/me` on launch. If no session exists, it shows a minimal
-login/signup screen. Auth requests use the backend cookie session and copy the
-`chronome_csrf` cookie into the `X-CSRF-Token` header for mutating requests.
+login/signup screen. Auth requests use a Supabase Bearer access token. The
+Supabase access and refresh tokens are kept in the iOS Keychain, and the access
+token is refreshed before expiry.
 
 After login, the timer can be associated with a project, tags, and notes.
 Stopping the timer persists a local work entry with SwiftData, then attempts to

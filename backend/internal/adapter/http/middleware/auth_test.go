@@ -76,3 +76,35 @@ func TestResolveSupabaseUserTruncatesOAuthDisplayName(t *testing.T) {
 	require.LessOrEqual(t, len(user.DisplayName), 50)
 	require.Len(t, []rune(user.DisplayName), 16)
 }
+
+func TestResolveSupabaseUserStoresMetadataTimeZone(t *testing.T) {
+	supabaseID := uuid.New()
+	users := &fakes.FakeUserRepository{
+		GetBySupabaseIDFn: func(context.Context, uuid.UUID) (*entity.User, error) { return nil, errors.New("not found") },
+		GetByEmailFn:      func(context.Context, string) (*entity.User, error) { return nil, errors.New("not found") },
+	}
+
+	user, err := resolveSupabaseUser(context.Background(), users, supabaseID, supabaseClaims{
+		Email:        "user@example.com",
+		UserMetadata: map[string]any{"time_zone": "Asia/Tokyo"},
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, "Asia/Tokyo", user.TimeZone)
+}
+
+func TestResolveSupabaseUserFallsBackToUTCForInvalidMetadataTimeZone(t *testing.T) {
+	supabaseID := uuid.New()
+	users := &fakes.FakeUserRepository{
+		GetBySupabaseIDFn: func(context.Context, uuid.UUID) (*entity.User, error) { return nil, errors.New("not found") },
+		GetByEmailFn:      func(context.Context, string) (*entity.User, error) { return nil, errors.New("not found") },
+	}
+
+	user, err := resolveSupabaseUser(context.Background(), users, supabaseID, supabaseClaims{
+		Email:        "user@example.com",
+		UserMetadata: map[string]any{"time_zone": "not/a-time-zone"},
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, "UTC", user.TimeZone)
+}
