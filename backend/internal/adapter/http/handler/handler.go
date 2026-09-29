@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -15,7 +13,6 @@ import (
 
 	"chronome/internal/adapter/http/middleware"
 	"chronome/internal/adapter/infra/config"
-	sess "chronome/internal/adapter/infra/session"
 	"chronome/internal/domain/entity"
 	"chronome/internal/domain/repository"
 	"chronome/internal/usecase"
@@ -29,26 +26,24 @@ const (
 
 // APIHandler は HTTP エンドポイントをユースケースに接続する。
 type APIHandler struct {
-	auth     *usecase.AuthUsecase
+	users    repository.UserRepository
 	projects *usecase.ProjectUsecase
 	tags     *usecase.TagUsecase
 	entries  *usecase.EntryUsecase
 	reports  *usecase.ReportUsecase
 	allocs   *usecase.AllocationUsecase
-	sessions sess.Store
 	cfg      config.Config
 }
 
-// NewAPIHandler は usecase と session store を束ねた APIHandler を生成する。
-func NewAPIHandler(cfg config.Config, sessions sess.Store, auth *usecase.AuthUsecase, projects *usecase.ProjectUsecase, tags *usecase.TagUsecase, entries *usecase.EntryUsecase, reports *usecase.ReportUsecase, allocs *usecase.AllocationUsecase) *APIHandler {
+// NewAPIHandler は usecase と認証用 repository を束ねた APIHandler を生成する。
+func NewAPIHandler(cfg config.Config, users repository.UserRepository, projects *usecase.ProjectUsecase, tags *usecase.TagUsecase, entries *usecase.EntryUsecase, reports *usecase.ReportUsecase, allocs *usecase.AllocationUsecase) *APIHandler {
 	return &APIHandler{
-		auth:     auth,
+		users:    users,
 		projects: projects,
 		tags:     tags,
 		entries:  entries,
 		reports:  reports,
 		allocs:   allocs,
-		sessions: sessions,
 		cfg:      cfg,
 	}
 }
@@ -56,54 +51,47 @@ func NewAPIHandler(cfg config.Config, sessions sess.Store, auth *usecase.AuthUse
 // Router はミドルウェアとルートを登録した chi ルーターを構築する。
 func (h *APIHandler) Router() *chi.Mux {
 	r := chi.NewRouter()
-	// フロントエンドから cookie を送るため、CORS は credentials 前提で許可する。
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{h.cfg.AllowedOrigin},
 		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", middleware.CSRFHeaderName},
-		AllowCredentials: true,
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+		AllowCredentials: false,
 		MaxAge:           300,
 	}))
-	r.Use(middleware.WithSession(h.sessions))
+	r.Use(middleware.WithSupabaseAuth(h.users, h.cfg.SupabaseJWTSecret))
 
 	r.Get("/healthz", h.healthz)
 
 	r.Route("/api", func(api chi.Router) {
-		// 認証系は signup/login だけ未認証で、プロフィール取得と logout は session を必須にする。
 		api.Route("/auth", func(auth chi.Router) {
-			auth.Post("/signup", h.signup)
-			auth.Post("/login", h.login)
 			auth.With(middleware.RequireAuth).Get("/me", h.me)
-			auth.With(middleware.RequireAuth, middleware.RequireCSRF(h.cfg.AllowedOrigin)).Post("/logout", h.logout)
 		})
 
-		// 参照系は CSRF 不要、状態変更系は CSRF を必須にする。
 		api.With(middleware.RequireAuth).Route("/projects", func(pr chi.Router) {
 			pr.Get("/", h.listProjects)
-			pr.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Post("/", h.createProject)
-			pr.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Patch("/{id}", h.updateProject)
-			pr.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Delete("/{id}", h.deleteProject)
+			pr.Post("/", h.createProject)
+			pr.Patch("/{id}", h.updateProject)
+			pr.Delete("/{id}", h.deleteProject)
 		})
 		api.With(middleware.RequireAuth).Route("/tags", func(tr chi.Router) {
 			tr.Get("/", h.listTags)
-			tr.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Post("/", h.createTag)
-			tr.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Patch("/{id}", h.updateTag)
-			tr.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Delete("/{id}", h.deleteTag)
+			tr.Post("/", h.createTag)
+			tr.Patch("/{id}", h.updateTag)
+			tr.Delete("/{id}", h.deleteTag)
 		})
 
 		api.With(middleware.RequireAuth).Route("/entries", func(er chi.Router) {
 			er.Get("/", h.listEntries)
-			er.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Post("/", h.createEntry)
-			er.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Patch("/{id}", h.updateEntry)
-			er.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Delete("/{id}", h.deleteEntry)
+			er.Post("/", h.createEntry)
+			er.Patch("/{id}", h.updateEntry)
+			er.Delete("/{id}", h.deleteEntry)
 		})
 
 		api.With(middleware.RequireAuth).Route("/allocations", func(ar chi.Router) {
-			ar.With(middleware.RequireCSRF(h.cfg.AllowedOrigin)).Post("/", h.createAllocation)
+			ar.Post("/", h.createAllocation)
 		})
 
 		api.With(middleware.RequireAuth).Route("/reports", func(rr chi.Router) {
-			// レポート系は参照専用のため CSRF は不要にしている。
 			rr.Get("/daily", h.dailyReport)
 			rr.Get("/weekly", h.weeklyReport)
 			rr.Get("/monthly", h.monthlyReport)
@@ -118,85 +106,9 @@ func (h *APIHandler) healthz(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write([]byte("ok"))
 }
 
-func (h *APIHandler) signup(w http.ResponseWriter, r *http.Request) {
-	var payload struct {
-		Email       string `json:"email"`
-		Password    string `json:"password"`
-		DisplayName string `json:"display_name"`
-		TimeZone    string `json:"time_zone"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid payload")
-		return
-	}
-	user, err := h.auth.Signup(r.Context(), usecase.SignupParams(payload))
-	if err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	respondJSON(w, http.StatusCreated, map[string]any{"user": mapUser(user)})
-}
-
-func (h *APIHandler) login(w http.ResponseWriter, r *http.Request) {
-	var payload struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid payload")
-		return
-	}
-	// 認証成功後に session cookie と CSRF cookie を発行し、以降の状態変更 request を検証する。
-	user, err := h.auth.Login(r.Context(), payload.Email, payload.Password)
-	if err != nil {
-		respondError(w, http.StatusUnauthorized, "invalid credentials")
-		return
-	}
-	sessionID, err := h.sessions.Create(user.ID, h.cfg.SessionTTL())
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, "session error")
-		return
-	}
-	expiresAt := time.Now().UTC().Add(h.cfg.SessionTTL())
-	// session cookie は HttpOnly にして JavaScript から読ませず、CSRF token は別 cookie で扱う。
-	http.SetCookie(w, &http.Cookie{
-		Name:     middleware.SessionCookieName,
-		Value:    sessionID,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   h.cfg.SessionCookieSecure,
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   int(h.cfg.SessionTTL().Seconds()),
-		Expires:  expiresAt,
-	})
-	csrfToken, err := generateCSRFToken()
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, "session error")
-		return
-	}
-	h.setCSRFCookie(w, csrfToken, expiresAt)
-	respondJSON(w, http.StatusOK, map[string]any{"user": mapUser(user)})
-}
-
-func (h *APIHandler) logout(w http.ResponseWriter, r *http.Request) {
-	if cookie, err := r.Cookie(middleware.SessionCookieName); err == nil {
-		h.sessions.Delete(cookie.Value)
-		cookie.Value = ""
-		cookie.Path = "/"
-		cookie.HttpOnly = true
-		cookie.Secure = h.cfg.SessionCookieSecure
-		cookie.SameSite = http.SameSiteLaxMode
-		cookie.MaxAge = -1
-		cookie.Expires = time.Unix(0, 0)
-		http.SetCookie(w, cookie)
-	}
-	h.clearCSRFCookie(w)
-	w.WriteHeader(http.StatusNoContent)
-}
-
 func (h *APIHandler) me(w http.ResponseWriter, r *http.Request) {
 	userID, _ := middleware.UserIDFromContext(r.Context())
-	user, err := h.auth.GetProfile(r.Context(), userID)
+	user, err := h.users.GetByID(r.Context(), userID)
 	if err != nil {
 		respondError(w, http.StatusNotFound, "user not found")
 		return
@@ -419,7 +331,7 @@ func (h *APIHandler) createAllocation(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) dailyReport(w http.ResponseWriter, r *http.Request) {
 	userID, _ := middleware.UserIDFromContext(r.Context())
-	user, err := h.auth.GetProfile(r.Context(), userID)
+	user, err := h.users.GetByID(r.Context(), userID)
 	if err != nil {
 		respondError(w, http.StatusNotFound, "user not found")
 		return
@@ -458,7 +370,7 @@ func (h *APIHandler) dailyReport(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) weeklyReport(w http.ResponseWriter, r *http.Request) {
 	userID, _ := middleware.UserIDFromContext(r.Context())
-	user, err := h.auth.GetProfile(r.Context(), userID)
+	user, err := h.users.GetByID(r.Context(), userID)
 	if err != nil {
 		respondError(w, http.StatusNotFound, "user not found")
 		return
@@ -496,7 +408,7 @@ func (h *APIHandler) weeklyReport(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) monthlyReport(w http.ResponseWriter, r *http.Request) {
 	userID, _ := middleware.UserIDFromContext(r.Context())
-	user, err := h.auth.GetProfile(r.Context(), userID)
+	user, err := h.users.GetByID(r.Context(), userID)
 	if err != nil {
 		respondError(w, http.StatusNotFound, "user not found")
 		return
@@ -589,11 +501,14 @@ func normalizeWeekStart(t time.Time, loc *time.Location) time.Time {
 func mapUser(user *entity.User) map[string]any {
 	// API response は frontend が扱う snake_case に正規化する。
 	return map[string]any{
-		"id":           user.ID,
-		"email":        user.Email,
-		"display_name": user.DisplayName,
-		"time_zone":    user.TimeZone,
-		"created_at":   user.CreatedAt,
+		"id":               user.ID,
+		"email":            user.Email,
+		"display_name":     user.DisplayName,
+		"time_zone":        user.TimeZone,
+		"supabase_user_id": user.SupabaseUserID,
+		"is_migrated":      user.IsMigrated,
+		"created_at":       user.CreatedAt,
+		"updated_at":       user.UpdatedAt,
 	}
 }
 
@@ -605,43 +520,6 @@ func respondJSON(w http.ResponseWriter, status int, payload any) {
 
 func respondError(w http.ResponseWriter, status int, message string) {
 	respondJSON(w, status, map[string]any{"error": message})
-}
-
-func generateCSRFToken() (string, error) {
-	// ダブルサブミット cookie 用に推測困難な URL-safe token を生成する。
-	buf := make([]byte, 32)
-	if _, err := rand.Read(buf); err != nil {
-		return "", err
-	}
-	return base64.RawURLEncoding.EncodeToString(buf), nil
-}
-
-func (h *APIHandler) setCSRFCookie(w http.ResponseWriter, token string, expiresAt time.Time) {
-	// CSRF cookie は frontend が header に転記するため HttpOnly にはしない。
-	http.SetCookie(w, &http.Cookie{
-		Name:     middleware.CSRFCookieName,
-		Value:    token,
-		Path:     "/",
-		HttpOnly: false,
-		Secure:   h.cfg.SessionCookieSecure,
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   int(h.cfg.SessionTTL().Seconds()),
-		Expires:  expiresAt,
-	})
-}
-
-func (h *APIHandler) clearCSRFCookie(w http.ResponseWriter) {
-	// logout 時は CSRF cookie も失効させ、古い token の再利用を避ける。
-	http.SetCookie(w, &http.Cookie{
-		Name:     middleware.CSRFCookieName,
-		Value:    "",
-		Path:     "/",
-		HttpOnly: false,
-		Secure:   h.cfg.SessionCookieSecure,
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   -1,
-		Expires:  time.Unix(0, 0),
-	})
 }
 
 func (h *APIHandler) resolveLocation(r *http.Request, user *entity.User) (*time.Location, error) {

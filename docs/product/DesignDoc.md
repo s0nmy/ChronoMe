@@ -9,7 +9,7 @@
   - フロントエンド：React + TypeScript  
   - バックエンド：Go（**クリーンアーキテクチャ + GORM + SQLite**）  
   - データベース：SQLite（初期開発） / PostgreSQL（スケール時移行）  
-  - 認証：サインド Cookie ベースのセッション  
+  - 認証：Supabase Auth の Bearer JWT
   - デプロイ対象：ローカル環境（手動実行）
 
 ---
@@ -64,12 +64,12 @@ ChronoMe バックエンドはクリーンアーキテクチャを採用し、�
 | フロント | React + TypeScript | Vite を利用した SPA |
 | ルーティング | **Chi** | 軽量HTTPルータ |
 | ORM / DB | **GORM + SQLite（初期） / PostgreSQL（移行時）** | SQLite を既定にし、DSN 切替で PostgreSQL 対応 |
-| マイグレーション | 手動スクリプト（必要に応じて `golang-migrate`） | 学習段階では SQL スクリプトを直接適用 |
+| マイグレーション | GORM AutoMigrate | 起動時にエンティティ定義から適用 |
 | 状態管理 | TanStack Query | API通信・キャッシュ管理 |
 | テスト | `go test` / React Testing Library | ユニット + 最小限の統合テスト |
 | DI | コンストラクタ注入 | 複雑なコンテナは使用しない |
 | 開発環境 | Go / npm のローカル実行 | Docker なしで構築 |
-| 認証 | サインド Cookie ベースのセッション | 学習用に簡素化 |
+| 認証 | Supabase Auth Bearer JWT | WebはSDK、iOSはKeychainでセッションを保持 |
 
 ---
 
@@ -84,7 +84,7 @@ backend/
  │   └── adapter/
  │       ├── http/handler,middleware
  │       ├── db/gormrepo        // GORM 実装
- │       └── infra/             // config, session, database, time など
+ │       └── infra/             // config, database, time など
  ├── test/fakes/                // フェイク Repository / Clock
  └── go.mod / go.sum
 
@@ -190,12 +190,12 @@ erDiagram
 
 | 項目 | 内容 |
 |------|------|
-| 認証方式 | サインド Cookie ベースのシンプルなセッション |
-| トークン保存 | ブラウザの Cookie（HttpOnly, Secure / SameSite=Lax） |
-| 暗号化 | bcrypt によるパスワードハッシュ化 |
+| 認証方式 | Supabase Auth が発行する Bearer JWT |
+| トークン保存 | Web は Supabase SDK のセッション、iOS は Supabase 認証クライアントのセッション |
+| 暗号化 | Supabase Auth が認証情報を管理し、バックエンドは JWT 署名を検証 |
 | 通信 | HTTPS 前提（開発では http://localhost） |
-| セッション管理 | ユーザーIDと失効時刻を HMAC-SHA256 で署名した Cookie に格納（サーバー側ストレージ不要） |
-| CSRF 対策 | SameSite=Lax 設定で最小限対応 |
+| セッション管理 | Supabase の access token を更新して利用 |
+| CSRF 対策 | Bearer 認証のため不要 |
 | CORS 対策 | 開発時のみ localhost:5173 を許可 |
 | パスワードポリシー | 最小8文字、英数字混在（基本的な要件のみ） |
 
@@ -212,10 +212,8 @@ RESTful API を採用し、JSON でデータを送受信します。
 
 | 区分 | メソッド | パス | 概要 | 認証 |
 |------|-----------|------|------|------|
-| Auth | POST | /api/auth/signup | 新規登録 | 不要 |
-| Auth | POST | /api/auth/login | ログイン | 不要 |
-| Auth | POST | /api/auth/logout | ログアウト | 必須 |
-| Auth | GET  | /api/auth/me | ログイン中ユーザー情報取得 | 必須 |
+| Auth | Supabase Auth | - | 新規登録・ログイン・ログアウト | Supabase SDK |
+| Auth | GET  | /api/auth/me | ログイン中ユーザー情報取得 | Bearer JWT |
 | Projects | GET, POST, PATCH, DELETE | /api/projects | プロジェクトCRUD | 必須 |
 | Entries | GET, POST, PATCH, DELETE | /api/entries | 作業記録CRUD | 必須 |
 | Entries | POST | /api/entries/start | 作業開始 | 必須 |
@@ -324,7 +322,7 @@ TEST_DATABASE_URL=postgres://chronome_test:chronome_test@localhost:5433/chronome
 ```
 
 ### 代表シナリオ（E2E）
-1) **Auth**：signup → login → me（不正認証は 401）  
+1) **Auth**：Supabase signup/login → Bearer tokenで`/api/auth/me`（不正認証は401）
 2) **Entries**：start → stop → list（未終了があれば自動終了）  
 3) **Reports**：`GET /reports/daily` で日次集計取得（UTC保存／JST表示の簡易確認）
 
@@ -339,7 +337,7 @@ TEST_DATABASE_URL=postgres://chronome_test:chronome_test@localhost:5433/chronome
 3. `cd frontend && npm install`
 4. バックエンド: `go run ./cmd/server`
 5. フロントエンド: `npm run dev`
-6. SQLite の場合は初回起動時に `dev.db` が自動生成される。PostgreSQL で運用する際は `backend/migrations` の SQL を適用する。
+6. SQLite / PostgreSQLとも、初回起動時にGORM AutoMigrateがエンティティ定義からスキーマを適用する。
 
 ---
 

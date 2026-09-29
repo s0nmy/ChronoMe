@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { AuthCallback } from "./components/AuthCallback";
 import { LoginPage } from "./components/LoginPage";
 import { SidebarNavigation } from "./components/SidebarNavigation";
 import type { TabType } from "./components/SidebarNavigation";
@@ -26,6 +27,7 @@ import {
   type EntryCreatePayload,
   type EntryUpdatePayload,
 } from "./lib/api";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 const TAG_COLOR_POOL = [
   "#ef4444",
@@ -86,7 +88,15 @@ const pickTagColor = (name: string): string => {
   return TAG_COLOR_POOL[index];
 };
 
-export default function App() {
+function AppContent() {
+  const {
+    supabaseUser,
+    isAuthLoading,
+    signInWithPassword,
+    signUpWithPassword,
+    signInWithOAuth,
+    signOut,
+  } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -108,7 +118,19 @@ export default function App() {
 
   useEffect(() => {
     const init = async () => {
+      if (isAuthLoading) {
+        return;
+      }
+      if (!supabaseUser) {
+        setUser(null);
+        setProjects([]);
+        setEntries([]);
+        setTags([]);
+        setInitializing(false);
+        return;
+      }
       try {
+        setInitializing(true);
         const result = await bootstrap();
         if (result.user) {
           setUser(result.user);
@@ -125,7 +147,7 @@ export default function App() {
       }
     };
     void init();
-  }, []);
+  }, [isAuthLoading, supabaseUser]);
 
   useEffect(() => {
     setEntries((prev) => attachProjectsToEntries(prev, projects));
@@ -183,7 +205,11 @@ export default function App() {
 
   const handleLogin = async (email: string, password: string) => {
     try {
-      const loggedIn = await api.login(email, password);
+      await signInWithPassword(email, password);
+      const loggedIn = await api.fetchCurrentUser();
+      if (!loggedIn) {
+        throw new Error("ログインユーザーを取得できませんでした。");
+      }
       setUser(loggedIn);
       await fetchCollections();
     } catch (error) {
@@ -196,7 +222,11 @@ export default function App() {
 
   const handleSignup = async (email: string, password: string) => {
     try {
-      const registered = await api.signup({ email, password });
+      await signUpWithPassword(email, password);
+      const registered = await api.fetchCurrentUser();
+      if (!registered) {
+        throw new Error("確認メールを送信しました。メール確認後にログインしてください。");
+      }
       setUser(registered);
       await fetchCollections();
     } catch (error) {
@@ -207,9 +237,13 @@ export default function App() {
     }
   };
 
+  const handleOAuthLogin = async (provider: "google" | "github" | "apple") => {
+    await signInWithOAuth(provider);
+  };
+
   const handleLogout = async () => {
     try {
-      await api.logout();
+      await signOut();
     } catch (error) {
       console.error("Failed to logout cleanly", error);
       throw error instanceof Error
@@ -580,6 +614,7 @@ export default function App() {
       <LoginPage
         onLogin={handleLogin}
         onSignup={handleSignup}
+        onOAuthLogin={handleOAuthLogin}
       />
     );
   }
@@ -651,5 +686,13 @@ export default function App() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      {window.location.pathname === "/auth/callback" ? <AuthCallback /> : <AppContent />}
+    </AuthProvider>
   );
 }

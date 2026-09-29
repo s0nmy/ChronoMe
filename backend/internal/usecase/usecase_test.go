@@ -358,10 +358,6 @@ func (stubConfig) DefaultProjectColor() string {
 	return "#3B82F6"
 }
 
-func (stubConfig) SessionTTL() time.Duration {
-	return time.Hour
-}
-
 var _ provider.AppConfig = stubConfig{}
 
 func intPtr(value int) *int {

@@ -3,14 +3,15 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
-import { Clock } from 'lucide-react';
+import { Apple, Clock, Github, Mail } from 'lucide-react';
 
 interface LoginPageProps {
   onLogin: (email: string, password: string) => Promise<void>;
   onSignup: (email: string, password: string) => Promise<void>;
+  onOAuthLogin: (provider: 'google' | 'github' | 'apple') => Promise<void>;
 }
 
-export function LoginPage({ onLogin, onSignup }: LoginPageProps) {
+export function LoginPage({ onLogin, onSignup, onOAuthLogin }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignup, setIsSignup] = useState(false);
@@ -32,6 +33,19 @@ export function LoginPage({ onLogin, onSignup }: LoginPageProps) {
         err instanceof Error ? err.message : '認証に失敗しました。時間をおいて再度お試しください。';
       setError(message);
     } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleOAuthLogin = async (provider: 'google' | 'github' | 'apple') => {
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await onOAuthLogin(provider);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : '認証に失敗しました。時間をおいて再度お試しください。';
+      setError(message);
       setIsSubmitting(false);
     }
   };
@@ -79,6 +93,38 @@ export function LoginPage({ onLogin, onSignup }: LoginPageProps) {
                 {error}
               </p>
             )}
+            <div className="grid gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => handleOAuthLogin('google')}
+                disabled={isSubmitting}
+              >
+                <Mail className="mr-2 h-4 w-4" />
+                Googleでログイン
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => handleOAuthLogin('github')}
+                disabled={isSubmitting}
+              >
+                <Github className="mr-2 h-4 w-4" />
+                GitHubでログイン
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => handleOAuthLogin('apple')}
+                disabled={isSubmitting}
+              >
+                <Apple className="mr-2 h-4 w-4" />
+                Appleでログイン
+              </Button>
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={isSubmitting}>

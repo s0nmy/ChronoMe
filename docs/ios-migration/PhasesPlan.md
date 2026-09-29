@@ -86,7 +86,7 @@ gantt
   - エラーハンドリング
 - [x] サインアップ画面
 - [x] ログアウト機能
-- [ ] Keychainへの認証トークン保存（現状はCookieセッション中心）
+- [x] Keychainへの認証トークン保存とrefresh tokenによるセッション更新
 - [x] 自動ログイン
 
 #### タイムエントリ機能
@@ -145,11 +145,11 @@ gantt
 
 #### API統合
 
-- [x] APIClient実装（URLSession）
-  - POST /api/auth/login
-  - POST /api/auth/signup
+- [x] APIClient実装（URLSession + Supabase Bearer認証）
+  - Supabase Authでログイン・サインアップ
+  - `/api/auth/me`へBearer tokenを送信
   - GET /api/auth/me
-  - POST /api/auth/logout
+  - Supabase Authでログアウト
 - [ ] TimeEntry / Project / Tag API実装
   - [x] GET /api/entries
   - [x] POST /api/entries
