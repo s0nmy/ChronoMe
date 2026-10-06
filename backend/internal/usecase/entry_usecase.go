@@ -14,19 +14,23 @@ import (
 
 // EntryUsecase は時間エントリ周りの業務処理を制御する。
 type EntryUsecase struct {
-	entries repository.EntryRepository
-	tags    repository.TagRepository
-	clock   provider.Clock
+	entries  repository.EntryRepository
+	projects repository.ProjectRepository
+	tags     repository.TagRepository
+	clock    provider.Clock
 }
 
-func NewEntryUsecase(entries repository.EntryRepository, tags repository.TagRepository, clock provider.Clock) *EntryUsecase {
-	return &EntryUsecase{entries: entries, tags: tags, clock: clock}
+func NewEntryUsecase(entries repository.EntryRepository, tags repository.TagRepository, projects repository.ProjectRepository, clock provider.Clock) *EntryUsecase {
+	return &EntryUsecase{entries: entries, tags: tags, projects: projects, clock: clock}
 }
 
 func (u *EntryUsecase) Create(ctx context.Context, userID uuid.UUID, input dto.EntryCreateRequest) (*entity.Entry, error) {
 	// DTO で入力形式を整え、usecase では業務上の組み立てに集中する。
 	data, err := input.Normalize()
 	if err != nil {
+		return nil, err
+	}
+	if err := u.validateProject(ctx, userID, data.ProjectID); err != nil {
 		return nil, err
 	}
 	started := u.clock.Now()
@@ -85,6 +89,9 @@ func (u *EntryUsecase) Update(ctx context.Context, userID uuid.UUID, id uuid.UUI
 	if err != nil {
 		return nil, err
 	}
+	if err := u.validateProject(ctx, userID, updates.ProjectID); err != nil {
+		return nil, err
+	}
 	if updates.Title != nil {
 		entry.Title = *updates.Title
 	}
@@ -140,6 +147,20 @@ func (u *EntryUsecase) Delete(ctx context.Context, userID uuid.UUID, id uuid.UUI
 		return errors.New("id is required")
 	}
 	return u.entries.Delete(ctx, userID, id)
+}
+
+// validateProject は認証ユーザーのプロジェクトとして取得できることを確認する。
+func (u *EntryUsecase) validateProject(ctx context.Context, userID uuid.UUID, projectID *uuid.UUID) error {
+	if projectID == nil {
+		return nil
+	}
+	if u.projects == nil {
+		return errors.New("project repository is not configured")
+	}
+	if _, err := u.projects.GetByID(ctx, userID, *projectID); err != nil {
+		return dto.ValidationError{Field: "project_id", Message: "contains unknown project"}
+	}
+	return nil
 }
 
 func (u *EntryUsecase) loadTags(ctx context.Context, userID uuid.UUID, tagIDs []uuid.UUID) ([]entity.Tag, error) {

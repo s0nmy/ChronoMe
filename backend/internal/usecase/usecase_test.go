@@ -28,7 +28,7 @@ func TestEntryUsecase_CreateSetsDefaults(t *testing.T) {
 	}
 	now := time.Date(2024, 1, 2, 15, 4, 5, 0, time.UTC)
 	clock := fakes.FixedTimeProvider{NowFunc: func() time.Time { return now }}
-	uc := NewEntryUsecase(repo, &fakes.FakeTagRepository{}, clock)
+	uc := NewEntryUsecase(repo, &fakes.FakeTagRepository{}, &fakes.FakeProjectRepository{}, clock)
 
 	entry, err := uc.Create(ctx, uuid.New(), dto.EntryCreateRequest{Title: "Focus"})
 	require.NoError(t, err)
@@ -54,7 +54,7 @@ func TestEntryUsecase_CreateValidatesTagOwnership(t *testing.T) {
 			return nil
 		},
 	}
-	uc := NewEntryUsecase(repo, tagRepo, fakes.FixedTimeProvider{})
+	uc := NewEntryUsecase(repo, tagRepo, &fakes.FakeProjectRepository{}, fakes.FixedTimeProvider{})
 
 	req := dto.EntryCreateRequest{Title: "Tagged", TagIDs: []string{tagID.String(), tagID.String()}}
 	_, err := uc.Create(ctx, userID, req)
@@ -63,7 +63,7 @@ func TestEntryUsecase_CreateValidatesTagOwnership(t *testing.T) {
 }
 
 func TestEntryUsecase_CreateValidatesTitle(t *testing.T) {
-	uc := NewEntryUsecase(&fakes.FakeEntryRepository{}, &fakes.FakeTagRepository{}, fakes.FixedTimeProvider{})
+	uc := NewEntryUsecase(&fakes.FakeEntryRepository{}, &fakes.FakeTagRepository{}, &fakes.FakeProjectRepository{}, fakes.FixedTimeProvider{})
 	_, err := uc.Create(context.Background(), uuid.New(), dto.EntryCreateRequest{})
 	var valErr dto.ValidationError
 	require.True(t, errors.As(err, &valErr))
@@ -78,7 +78,7 @@ func TestEntryUsecase_UpdateValidatesChangedFields(t *testing.T) {
 			return &cloned, nil
 		},
 	}
-	uc := NewEntryUsecase(repo, &fakes.FakeTagRepository{}, fakes.FixedTimeProvider{NowFunc: func() time.Time { return now.Add(time.Hour) }})
+	uc := NewEntryUsecase(repo, &fakes.FakeTagRepository{}, &fakes.FakeProjectRepository{}, fakes.FixedTimeProvider{NowFunc: func() time.Time { return now.Add(time.Hour) }})
 
 	invalid := -2.0
 	_, err := uc.Update(context.Background(), existing.UserID, existing.ID, dto.EntryUpdateRequest{Ratio: &invalid})
@@ -99,7 +99,7 @@ func TestEntryUsecase_UpdateRejectsUnknownTags(t *testing.T) {
 			return nil, errors.New("not found")
 		},
 	}
-	uc := NewEntryUsecase(repo, tagRepo, fakes.FixedTimeProvider{})
+	uc := NewEntryUsecase(repo, tagRepo, &fakes.FakeProjectRepository{}, fakes.FixedTimeProvider{})
 	ids := []string{uuid.NewString()}
 	_, err := uc.Update(context.Background(), userID, entryID, dto.EntryUpdateRequest{TagIDs: &ids})
 	var valErr dto.ValidationError
@@ -108,7 +108,7 @@ func TestEntryUsecase_UpdateRejectsUnknownTags(t *testing.T) {
 }
 
 func TestEntryUsecase_DeleteRequiresID(t *testing.T) {
-	uc := NewEntryUsecase(&fakes.FakeEntryRepository{}, &fakes.FakeTagRepository{}, fakes.FixedTimeProvider{})
+	uc := NewEntryUsecase(&fakes.FakeEntryRepository{}, &fakes.FakeTagRepository{}, &fakes.FakeProjectRepository{}, fakes.FixedTimeProvider{})
 	err := uc.Delete(context.Background(), uuid.New(), uuid.Nil)
 	require.EqualError(t, err, "id is required")
 }
