@@ -77,7 +77,7 @@ func seedDemoData(ctx context.Context, db *gorm.DB, user *entity.User) error {
 	projectRepo := gormrepo.NewProjectRepository(db)
 	tagRepo := gormrepo.NewTagRepository(db)
 	entryRepo := gormrepo.NewEntryRepository(db)
-	entryUC := usecase.NewEntryUsecase(entryRepo, tagRepo, infTime.SystemClock{})
+	entryUC := usecase.NewEntryUsecase(entryRepo, tagRepo, projectRepo, infTime.SystemClock{})
 
 	log.Println("cleaning previous demo data...")
 	if err := db.Where("user_id = ?", user.ID).Delete(&entity.Entry{}).Error; err != nil {

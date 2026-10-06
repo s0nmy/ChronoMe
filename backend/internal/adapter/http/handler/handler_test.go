@@ -258,7 +258,7 @@ func newAPIHandlerForTests(t *testing.T, projectRepo *fakes.FakeProjectRepositor
 	}
 	projects := usecase.NewProjectUsecase(projectRepo, cfg)
 	tags := usecase.NewTagUsecase(tagRepo, cfg)
-	entries := usecase.NewEntryUsecase(entryRepo, tagRepo, fakes.FixedTimeProvider{})
+	entries := usecase.NewEntryUsecase(entryRepo, tagRepo, projectRepo, fakes.FixedTimeProvider{})
 	reports := usecase.NewReportUsecase(entryRepo, projectRepo)
 	allocationUC := usecase.NewAllocationUsecase(allocationRepo, fakes.FixedTimeProvider{})
 	return NewAPIHandler(cfg, userRepo, projects, tags, entries, reports, allocationUC), cfg

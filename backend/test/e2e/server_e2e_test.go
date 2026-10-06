@@ -129,6 +129,59 @@ func TestChronoMeEndToEnd(t *testing.T) {
 	require.Len(t, fx.listTags(), 0)
 }
 
+func TestEntryProjectOwnership(t *testing.T) {
+	fx := newFixture(t)
+	fx.createSupabaseUser("other-project-owner@example.com")
+	foreign := fx.createProject("Other user's project", "#111111")
+	fx.createSupabaseUser("entry-owner@example.com")
+	owned := fx.createProject("Owned project", "#222222")
+	entry := fx.createEntry(owned.ID, "Original", time.Now().UTC(), nil)
+
+	for _, tc := range []struct {
+		name string
+		id   uuid.UUID
+	}{
+		{name: "another user's project", id: foreign.ID},
+		{name: "nonexistent project", id: uuid.New()},
+		{name: "zero UUID", id: uuid.Nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			payload := map[string]string{"title": "Rejected", "project_id": tc.id.String()}
+			status, body := fx.do(http.MethodPost, "/api/entries/", payload)
+			require.Equal(t, http.StatusBadRequest, status)
+			require.Contains(t, string(body), "project_id: contains unknown project")
+			status, body = fx.do(http.MethodPatch, "/api/entries/"+entry.ID.String(), payload)
+			require.Equal(t, http.StatusBadRequest, status)
+			require.Contains(t, string(body), "project_id: contains unknown project")
+
+			entries := fx.listEntries()
+			require.Len(t, entries, 1, "rejected creation must not persist an entry")
+			require.Equal(t, "Original", entries[0].Title)
+			require.Equal(t, &owned.ID, entries[0].ProjectID)
+		})
+	}
+
+	replacement := fx.createProject("Replacement", "#333333")
+	var updated entity.Entry
+	status := fx.doJSON(http.MethodPatch, "/api/entries/"+entry.ID.String(), map[string]string{
+		"project_id": replacement.ID.String(),
+	}, &updated)
+	require.Equal(t, http.StatusOK, status)
+	require.Equal(t, &replacement.ID, updated.ProjectID)
+
+	status = fx.doJSON(http.MethodPatch, "/api/entries/"+entry.ID.String(), map[string]string{
+		"title": "Renamed",
+	}, &updated)
+	require.Equal(t, http.StatusOK, status)
+	require.Equal(t, "Renamed", updated.Title)
+	require.Equal(t, &replacement.ID, updated.ProjectID, "omitting project_id preserves the association")
+
+	var unassigned entity.Entry
+	status = fx.doJSON(http.MethodPost, "/api/entries/", map[string]string{"title": "Unassigned"}, &unassigned)
+	require.Equal(t, http.StatusCreated, status)
+	require.Nil(t, unassigned.ProjectID)
+}
+
 type fixture struct {
 	t        *testing.T
 	client   *http.Client
@@ -168,7 +221,7 @@ func newFixture(t *testing.T) *fixture {
 
 	projectUC := usecase.NewProjectUsecase(projectRepo, cfg)
 	tagUC := usecase.NewTagUsecase(tagRepo, cfg)
-	entryUC := usecase.NewEntryUsecase(entryRepo, tagRepo, infTime.SystemClock{})
+	entryUC := usecase.NewEntryUsecase(entryRepo, tagRepo, projectRepo, infTime.SystemClock{})
 	reportUC := usecase.NewReportUsecase(entryRepo, projectRepo)
 
 	allocationUC := usecase.NewAllocationUsecase(&fakes.FakeAllocationRepository{}, fakes.FixedTimeProvider{})

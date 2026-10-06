@@ -40,7 +40,7 @@ func main() {
 	// ユースケースは repository interface に依存し、DB 実装の詳細を知らない。
 	projectUC := usecase.NewProjectUsecase(projectRepo, cfg)
 	tagUC := usecase.NewTagUsecase(tagRepo, cfg)
-	entryUC := usecase.NewEntryUsecase(entryRepo, tagRepo, infTime.SystemClock{})
+	entryUC := usecase.NewEntryUsecase(entryRepo, tagRepo, projectRepo, infTime.SystemClock{})
 	reportUC := usecase.NewReportUsecase(entryRepo, projectRepo)
 	allocationUC := usecase.NewAllocationUsecase(allocationRepo, infTime.SystemClock{})
 
