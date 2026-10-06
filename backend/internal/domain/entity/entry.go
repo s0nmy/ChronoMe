@@ -31,6 +31,9 @@ func (e *Entry) Validate() error {
 	if e.StartedAt.IsZero() {
 		return errors.New("started_at is required")
 	}
+	if e.EndedAt != nil && !e.EndedAt.After(e.StartedAt) {
+		return errors.New("ended_at must be after started_at")
+	}
 	if e.Ratio <= 0 {
 		return errors.New("ratio must be positive")
 	}
@@ -43,6 +46,7 @@ func (e *Entry) UpdateDuration(now time.Time) {
 	if e.EndedAt != nil {
 		end = *e.EndedAt
 	}
+	e.DurationSec = 0
 	if end.After(e.StartedAt) {
 		e.DurationSec = int64(end.Sub(e.StartedAt).Seconds())
 	}
