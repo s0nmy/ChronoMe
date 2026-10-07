@@ -57,12 +57,12 @@ func (u *EntryUsecase) Create(ctx context.Context, userID uuid.UUID, input dto.E
 		return nil, err
 	}
 	entry.Tags = tags
-	if entry.EndedAt != nil {
-		entry.UpdateDuration(entry.EndedAt.UTC())
-	}
-	// entity の不変条件を通してから repository に渡す。
+	// entity の不変条件を通してから所要時間を計算し、repository に渡す。
 	if err := entry.Validate(); err != nil {
 		return nil, err
+	}
+	if entry.EndedAt != nil {
+		entry.UpdateDuration(entry.EndedAt.UTC())
 	}
 	if err := u.entries.Create(ctx, entry); err != nil {
 		return nil, err
@@ -126,11 +126,11 @@ func (u *EntryUsecase) Update(ctx context.Context, userID uuid.UUID, id uuid.UUI
 		}
 		entry.Tags = tags
 	}
-	// 実行中エントリは現在時刻まで、終了済みエントリは EndedAt までの duration に更新する。
-	entry.UpdateDuration(u.clock.Now())
 	if err := entry.Validate(); err != nil {
 		return nil, err
 	}
+	// 実行中エントリは現在時刻まで、終了済みエントリは EndedAt までの duration に更新する。
+	entry.UpdateDuration(u.clock.Now())
 	if err := u.entries.Update(ctx, entry); err != nil {
 		return nil, err
 	}
