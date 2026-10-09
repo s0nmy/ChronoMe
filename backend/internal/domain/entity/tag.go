@@ -9,6 +9,7 @@ import (
 
 // Tag は詳細な絞り込みのためにエントリへラベルを付ける。
 type Tag struct {
+	Version   int64     `gorm:"not null;default:1" json:"version"`
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID    uuid.UUID `gorm:"type:uuid;index;not null" json:"-"`
 	Name      string    `gorm:"size:40;not null" json:"name"`

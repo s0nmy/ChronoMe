@@ -30,6 +30,7 @@ func (r ProjectCreateRequest) Normalize(defaultColor string) (ProjectInput, erro
 
 // ProjectUpdateRequest は部分更新を扱う。
 type ProjectUpdateRequest struct {
+	Version     *int64  `json:"version,omitempty"`
 	Name        *string `json:"name"`
 	Color       *string `json:"color"`
 	Description *string `json:"description"`
@@ -38,6 +39,9 @@ type ProjectUpdateRequest struct {
 
 // Normalize はトリム済み値を保証する。
 func (r ProjectUpdateRequest) Normalize() (ProjectUpdateInput, error) {
+	if r.Version != nil && *r.Version < 1 {
+		return ProjectUpdateInput{}, ValidationError{Field: "version", Message: "must be positive"}
+	}
 	if r.Name != nil {
 		trimmed := strings.TrimSpace(*r.Name)
 		if trimmed == "" {

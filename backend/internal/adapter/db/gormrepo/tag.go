@@ -2,11 +2,13 @@ package gormrepo
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	"chronome/internal/domain/entity"
+	"chronome/internal/domain/repository"
 )
 
 // TagRepository は repository.TagRepository を実装する。
@@ -38,8 +40,24 @@ func (r *TagRepository) GetByID(ctx context.Context, userID uuid.UUID, id uuid.U
 	return &tag, nil
 }
 
-func (r *TagRepository) Update(ctx context.Context, tag *entity.Tag) error {
-	return r.db.WithContext(ctx).Save(tag).Error
+func (r *TagRepository) Update(ctx context.Context, tag *entity.Tag, columns []string) error {
+	now := time.Now().UTC()
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		result := tx.Model(&entity.Tag{}).Where("id = ? AND user_id = ? AND version = ?", tag.ID, tag.UserID, tag.Version).
+			Select(append(append([]string{}, columns...), "version", "updated_at")).Omit("Tags").Updates(updateValues(map[string]any{"name": tag.Name, "color": tag.Color}, columns, now))
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected != 1 {
+			return repository.ErrConflict
+		}
+		return nil
+	})
+	if err == nil {
+		tag.Version++
+		tag.UpdatedAt = now
+	}
+	return err
 }
 
 func (r *TagRepository) Delete(ctx context.Context, userID uuid.UUID, id uuid.UUID) error {

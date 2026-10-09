@@ -23,7 +23,7 @@ type ProjectRepository interface {
 	Create(ctx context.Context, project *entity.Project) error
 	ListByUser(ctx context.Context, userID uuid.UUID) ([]entity.Project, error)
 	GetByID(ctx context.Context, userID uuid.UUID, id uuid.UUID) (*entity.Project, error)
-	Update(ctx context.Context, project *entity.Project) error
+	Update(ctx context.Context, project *entity.Project, columns []string) error
 	Delete(ctx context.Context, userID uuid.UUID, id uuid.UUID) error
 }
 
@@ -40,7 +40,7 @@ type EntryRepository interface {
 	Create(ctx context.Context, entry *entity.Entry) error
 	ListByUser(ctx context.Context, userID uuid.UUID, filter EntryFilter) ([]entity.Entry, error)
 	GetByID(ctx context.Context, userID uuid.UUID, id uuid.UUID) (*entity.Entry, error)
-	Update(ctx context.Context, entry *entity.Entry) error
+	Update(ctx context.Context, entry *entity.Entry, columns []string) error
 	Delete(ctx context.Context, userID uuid.UUID, id uuid.UUID) error
 	ReplaceTags(ctx context.Context, entry *entity.Entry, tagIDs []uuid.UUID) error
 }
@@ -50,7 +50,7 @@ type TagRepository interface {
 	Create(ctx context.Context, tag *entity.Tag) error
 	ListByUser(ctx context.Context, userID uuid.UUID) ([]entity.Tag, error)
 	GetByID(ctx context.Context, userID uuid.UUID, id uuid.UUID) (*entity.Tag, error)
-	Update(ctx context.Context, tag *entity.Tag) error
+	Update(ctx context.Context, tag *entity.Tag, columns []string) error
 	Delete(ctx context.Context, userID uuid.UUID, id uuid.UUID) error
 }
 

@@ -26,12 +26,16 @@ func (r TagCreateRequest) Normalize(defaultColor string) (TagInput, error) {
 
 // TagUpdateRequest は部分更新を扱う。
 type TagUpdateRequest struct {
-	Name  *string `json:"name"`
-	Color *string `json:"color"`
+	Version *int64  `json:"version,omitempty"`
+	Name    *string `json:"name"`
+	Color   *string `json:"color"`
 }
 
 // Normalize は更新フィールドをトリムして検証する。
 func (r TagUpdateRequest) Normalize() (TagUpdateInput, error) {
+	if r.Version != nil && *r.Version < 1 {
+		return TagUpdateInput{}, ValidationError{Field: "version", Message: "must be positive"}
+	}
 	if r.Name != nil {
 		trimmed := strings.TrimSpace(*r.Name)
 		if trimmed == "" {

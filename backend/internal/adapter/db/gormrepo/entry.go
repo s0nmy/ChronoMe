@@ -2,6 +2,8 @@ package gormrepo
 
 import (
 	"context"
+	"slices"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -56,8 +58,40 @@ func (r *EntryRepository) GetByID(ctx context.Context, userID uuid.UUID, id uuid
 	return &entry, nil
 }
 
-func (r *EntryRepository) Update(ctx context.Context, entry *entity.Entry) error {
-	return r.db.WithContext(ctx).Save(entry).Error
+func (r *EntryRepository) Update(ctx context.Context, entry *entity.Entry, columns []string) error {
+	now := time.Now().UTC()
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		result := tx.Model(&entity.Entry{}).Where("id = ? AND user_id = ? AND version = ?", entry.ID, entry.UserID, entry.Version).
+			Select(append(append([]string{}, columns...), "version", "updated_at")).Omit("Tags").Updates(updateValues(map[string]any{"title": entry.Title, "notes": entry.Notes, "project_id": entry.ProjectID, "started_at": entry.StartedAt, "ended_at": entry.EndedAt, "duration_sec": entry.DurationSec, "is_break": entry.IsBreak, "ratio": entry.Ratio}, columns, now))
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected != 1 {
+			return repository.ErrConflict
+		}
+
+		if slices.Contains(columns, "Tags") {
+			// Only replace join rows; never save tag entities from a stale snapshot.
+			if err := tx.Where("entry_id = ?", entry.ID).Delete(&entity.EntryTag{}).Error; err != nil {
+				return err
+			}
+			links := make([]entity.EntryTag, 0, len(entry.Tags))
+			for _, tag := range entry.Tags {
+				links = append(links, entity.EntryTag{EntryID: entry.ID, TagID: tag.ID})
+			}
+			if len(links) > 0 {
+				if err := tx.Create(&links).Error; err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+	if err == nil {
+		entry.Version++
+		entry.UpdatedAt = now
+	}
+	return err
 }
 
 func (r *EntryRepository) Delete(ctx context.Context, userID uuid.UUID, id uuid.UUID) error {

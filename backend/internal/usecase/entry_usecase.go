@@ -89,22 +89,31 @@ func (u *EntryUsecase) Update(ctx context.Context, userID uuid.UUID, id uuid.UUI
 	if err != nil {
 		return nil, err
 	}
+	if input.Version != nil && *input.Version != entry.Version {
+		return nil, repository.ErrConflict
+	}
+	columns := []string{}
 	if err := u.validateProject(ctx, userID, updates.ProjectID); err != nil {
 		return nil, err
 	}
 	if updates.Title != nil {
+		columns = append(columns, "title")
 		entry.Title = *updates.Title
 	}
 	if updates.Notes != nil {
+		columns = append(columns, "notes")
 		entry.Notes = *updates.Notes
 	}
 	if updates.ProjectID != nil {
+		columns = append(columns, "project_id")
 		entry.ProjectID = updates.ProjectID
 	}
 	if updates.StartedAt != nil {
+		columns = append(columns, "started_at")
 		entry.StartedAt = updates.StartedAt.UTC()
 	}
 	if updates.EndedAtSet {
+		columns = append(columns, "ended_at")
 		if updates.EndedAt == nil {
 			entry.EndedAt = nil
 		} else {
@@ -113,13 +122,16 @@ func (u *EntryUsecase) Update(ctx context.Context, userID uuid.UUID, id uuid.UUI
 		}
 	}
 	if updates.IsBreak != nil {
+		columns = append(columns, "is_break")
 		entry.IsBreak = *updates.IsBreak
 	}
 	if updates.Ratio != nil {
+		columns = append(columns, "ratio")
 		entry.Ratio = *updates.Ratio
 	}
 	var tags []entity.Tag
 	if updates.TagIDsSet {
+		columns = append(columns, "Tags")
 		tags, err = u.loadTags(ctx, userID, updates.TagIDs)
 		if err != nil {
 			return nil, err
@@ -130,14 +142,12 @@ func (u *EntryUsecase) Update(ctx context.Context, userID uuid.UUID, id uuid.UUI
 		return nil, err
 	}
 	// 実行中エントリは現在時刻まで、終了済みエントリは EndedAt までの duration に更新する。
-	entry.UpdateDuration(u.clock.Now())
-	if err := u.entries.Update(ctx, entry); err != nil {
-		return nil, err
+	if updates.StartedAt != nil || updates.EndedAtSet {
+		entry.UpdateDuration(u.clock.Now())
+		columns = append(columns, "duration_sec")
 	}
-	if updates.TagIDsSet {
-		if err := u.entries.ReplaceTags(ctx, entry, tagIDsFrom(tags)); err != nil {
-			return nil, err
-		}
+	if err := u.entries.Update(ctx, entry, columns); err != nil {
+		return nil, err
 	}
 	return entry, nil
 }

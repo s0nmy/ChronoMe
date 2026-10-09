@@ -84,7 +84,7 @@ func (f *FakeProjectRepository) GetByID(ctx context.Context, userID uuid.UUID, i
 	return nil, errors.New("GetByID not implemented")
 }
 
-func (f *FakeProjectRepository) Update(ctx context.Context, project *entity.Project) error {
+func (f *FakeProjectRepository) Update(ctx context.Context, project *entity.Project, columns []string) error {
 	if f.UpdateFn != nil {
 		return f.UpdateFn(ctx, project)
 	}
@@ -129,7 +129,7 @@ func (f *FakeEntryRepository) GetByID(ctx context.Context, userID uuid.UUID, id 
 	return nil, errors.New("GetByID not implemented")
 }
 
-func (f *FakeEntryRepository) Update(ctx context.Context, entry *entity.Entry) error {
+func (f *FakeEntryRepository) Update(ctx context.Context, entry *entity.Entry, columns []string) error {
 	if f.UpdateFn != nil {
 		return f.UpdateFn(ctx, entry)
 	}
@@ -180,7 +180,7 @@ func (f *FakeTagRepository) GetByID(ctx context.Context, userID uuid.UUID, id uu
 	return nil, errors.New("GetByID not implemented")
 }
 
-func (f *FakeTagRepository) Update(ctx context.Context, tag *entity.Tag) error {
+func (f *FakeTagRepository) Update(ctx context.Context, tag *entity.Tag, columns []string) error {
 	if f.UpdateFn != nil {
 		return f.UpdateFn(ctx, tag)
 	}

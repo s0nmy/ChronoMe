@@ -56,22 +56,30 @@ func (u *ProjectUsecase) Update(ctx context.Context, userID uuid.UUID, id uuid.U
 	if err != nil {
 		return nil, err
 	}
+	if input.Version != nil && *input.Version != project.Version {
+		return nil, repository.ErrConflict
+	}
+	columns := []string{}
 	if data.Name != nil {
+		columns = append(columns, "name")
 		project.Name = *data.Name
 	}
 	if data.Color != nil {
+		columns = append(columns, "color")
 		project.Color = *data.Color
 	}
 	if data.Description != nil {
+		columns = append(columns, "description")
 		project.Description = *data.Description
 	}
 	if data.IsArchived != nil {
+		columns = append(columns, "is_archived")
 		project.IsArchived = *data.IsArchived
 	}
 	if err := project.Validate(); err != nil {
 		return nil, err
 	}
-	if err := u.projects.Update(ctx, project); err != nil {
+	if err := u.projects.Update(ctx, project, columns); err != nil {
 		return nil, err
 	}
 	return project, nil

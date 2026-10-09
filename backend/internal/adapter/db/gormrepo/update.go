@@ -1,0 +1,17 @@
+package gormrepo
+
+import (
+	"gorm.io/gorm"
+	"time"
+)
+
+// updateValues keeps explicit zero values and only includes requested columns.
+func updateValues(fields map[string]any, columns []string, now time.Time) map[string]any {
+	values := map[string]any{"version": gorm.Expr("version + 1"), "updated_at": now}
+	for _, column := range columns {
+		if value, ok := fields[column]; ok {
+			values[column] = value
+		}
+	}
+	return values
+}

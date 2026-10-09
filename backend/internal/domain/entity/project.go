@@ -9,6 +9,7 @@ import (
 
 // Project はレポート用にエントリをまとめる。
 type Project struct {
+	Version     int64     `gorm:"not null;default:1" json:"version"`
 	ID          uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID      uuid.UUID `gorm:"type:uuid;index;not null" json:"user_id"`
 	Name        string    `gorm:"size:80;not null" json:"name"`

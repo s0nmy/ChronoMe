@@ -61,7 +61,7 @@ func TestProjectRepository_CRUD(t *testing.T) {
 	require.Equal(t, "Backend", loaded.Name)
 
 	loaded.Name = "Backend v2"
-	require.NoError(t, repo.Update(ctx, loaded))
+	require.NoError(t, repo.Update(ctx, loaded, []string{"name"}))
 
 	updated, err := repo.GetByID(ctx, userID, first.ID)
 	require.NoError(t, err)
@@ -170,7 +170,7 @@ func TestTagRepository_CreateAndList(t *testing.T) {
 	require.Equal(t, tag.ID, found.ID)
 
 	found.Name = "Shallow"
-	require.NoError(t, repo.Update(ctx, found))
+	require.NoError(t, repo.Update(ctx, found, []string{"name"}))
 
 	updated, err := repo.GetByID(ctx, userID, tag.ID)
 	require.NoError(t, err)
