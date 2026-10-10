@@ -7,7 +7,7 @@ import { api, bootstrap, type EntryCreatePayload, type EntryUpdatePayload } from
 import { attachProjectsToEntries, deriveEntryTitle } from "../entries/entryHelpers";
 import { useTags } from "../tags/useTags";
 import { useEntryTimers } from "../timer/useEntryTimers";
-import { getCurrentElapsedTime } from "../timer/elapsedTime";
+import { getCurrentElapsedTime, getTimerEndedAt } from "../timer/elapsedTime";
 
 export function useChronome() {
   const {
@@ -145,8 +145,9 @@ export function useChronome() {
     const activeEntry = activeEntries.find((entry) => entry.timerId === timerId);
     if (!activeEntry) return;
 
-    const endedAt = new Date();
+    const stoppedAt = new Date();
     try {
+      const endedAt = getTimerEndedAt(activeEntry, stoppedAt);
       const tagEntities = await ensureTagsForNames(activeEntry.tags || []);
       const payload: EntryCreatePayload = {
         title: deriveEntryTitle(activeEntry.notes, activeEntry.projectName),
