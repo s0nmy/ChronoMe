@@ -1,11 +1,12 @@
 package gormrepo
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
-// updateValues keeps explicit zero values and only includes requested columns.
+// updateValues はゼロ値を保持し、指定された列だけを更新値に含める。
 func updateValues(fields map[string]any, columns []string, now time.Time) map[string]any {
 	values := map[string]any{"version": gorm.Expr("version + 1"), "updated_at": now}
 	for _, column := range columns {

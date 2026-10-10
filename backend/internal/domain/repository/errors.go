@@ -2,5 +2,5 @@ package repository
 
 import "errors"
 
-// ErrConflict means the resource changed or was deleted after it was read.
+// ErrConflict は取得後に対象データが更新または削除されたことを示す。
 var ErrConflict = errors.New("resource changed; reload before retrying")

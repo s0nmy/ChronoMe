@@ -43,9 +43,22 @@ func (r *ProjectRepository) GetByID(ctx context.Context, userID uuid.UUID, id uu
 
 func (r *ProjectRepository) Update(ctx context.Context, project *entity.Project, columns []string) error {
 	now := time.Now().UTC()
+	fields := map[string]any{
+		"name":        project.Name,
+		"description": project.Description,
+		"color":       project.Color,
+		"is_archived": project.IsArchived,
+	}
+	values := updateValues(fields, columns, now)
+	selectedColumns := append([]string{}, columns...)
+	selectedColumns = append(selectedColumns, "version", "updated_at")
+
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		result := tx.Model(&entity.Project{}).Where("id = ? AND user_id = ? AND version = ?", project.ID, project.UserID, project.Version).
-			Select(append(append([]string{}, columns...), "version", "updated_at")).Omit("Tags").Updates(updateValues(map[string]any{"name": project.Name, "description": project.Description, "color": project.Color, "is_archived": project.IsArchived}, columns, now))
+		result := tx.Model(&entity.Project{}).
+			Where("id = ? AND user_id = ? AND version = ?", project.ID, project.UserID, project.Version).
+			Select(selectedColumns).
+			Omit("Tags").
+			Updates(values)
 		if result.Error != nil {
 			return result.Error
 		}

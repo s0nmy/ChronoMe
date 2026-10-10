@@ -60,9 +60,26 @@ func (r *EntryRepository) GetByID(ctx context.Context, userID uuid.UUID, id uuid
 
 func (r *EntryRepository) Update(ctx context.Context, entry *entity.Entry, columns []string) error {
 	now := time.Now().UTC()
+	fields := map[string]any{
+		"title":        entry.Title,
+		"notes":        entry.Notes,
+		"project_id":   entry.ProjectID,
+		"started_at":   entry.StartedAt,
+		"ended_at":     entry.EndedAt,
+		"duration_sec": entry.DurationSec,
+		"is_break":     entry.IsBreak,
+		"ratio":        entry.Ratio,
+	}
+	values := updateValues(fields, columns, now)
+	selectedColumns := append([]string{}, columns...)
+	selectedColumns = append(selectedColumns, "version", "updated_at")
+
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		result := tx.Model(&entity.Entry{}).Where("id = ? AND user_id = ? AND version = ?", entry.ID, entry.UserID, entry.Version).
-			Select(append(append([]string{}, columns...), "version", "updated_at")).Omit("Tags").Updates(updateValues(map[string]any{"title": entry.Title, "notes": entry.Notes, "project_id": entry.ProjectID, "started_at": entry.StartedAt, "ended_at": entry.EndedAt, "duration_sec": entry.DurationSec, "is_break": entry.IsBreak, "ratio": entry.Ratio}, columns, now))
+		result := tx.Model(&entity.Entry{}).
+			Where("id = ? AND user_id = ? AND version = ?", entry.ID, entry.UserID, entry.Version).
+			Select(selectedColumns).
+			Omit("Tags").
+			Updates(values)
 		if result.Error != nil {
 			return result.Error
 		}
@@ -71,7 +88,7 @@ func (r *EntryRepository) Update(ctx context.Context, entry *entity.Entry, colum
 		}
 
 		if slices.Contains(columns, "Tags") {
-			// Only replace join rows; never save tag entities from a stale snapshot.
+			// 中間テーブルの関連だけを置き換え、取得時の古いタグ本体は保存しない。
 			if err := tx.Where("entry_id = ?", entry.ID).Delete(&entity.EntryTag{}).Error; err != nil {
 				return err
 			}

@@ -42,9 +42,20 @@ func (r *TagRepository) GetByID(ctx context.Context, userID uuid.UUID, id uuid.U
 
 func (r *TagRepository) Update(ctx context.Context, tag *entity.Tag, columns []string) error {
 	now := time.Now().UTC()
+	fields := map[string]any{
+		"name":  tag.Name,
+		"color": tag.Color,
+	}
+	values := updateValues(fields, columns, now)
+	selectedColumns := append([]string{}, columns...)
+	selectedColumns = append(selectedColumns, "version", "updated_at")
+
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		result := tx.Model(&entity.Tag{}).Where("id = ? AND user_id = ? AND version = ?", tag.ID, tag.UserID, tag.Version).
-			Select(append(append([]string{}, columns...), "version", "updated_at")).Omit("Tags").Updates(updateValues(map[string]any{"name": tag.Name, "color": tag.Color}, columns, now))
+		result := tx.Model(&entity.Tag{}).
+			Where("id = ? AND user_id = ? AND version = ?", tag.ID, tag.UserID, tag.Version).
+			Select(selectedColumns).
+			Omit("Tags").
+			Updates(values)
 		if result.Error != nil {
 			return result.Error
 		}

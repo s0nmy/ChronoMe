@@ -31,7 +31,7 @@ func TestVersionedUpdates(t *testing.T) {
 			status, body := fx.do(http.MethodPatch, tc.path, map[string]any{tc.field: "stale", "version": tc.version})
 			require.Equal(t, http.StatusConflict, status)
 			require.Contains(t, string(body), "reload")
-			// Version omission remains compatible; fields omitted by the patch survive.
+			// version の省略時も更新でき、指定していない項目は保持される。
 			patch := map[string]any{"color": "#222222"}
 			if tc.field == "title" {
 				patch = map[string]any{"notes": "new notes"}
