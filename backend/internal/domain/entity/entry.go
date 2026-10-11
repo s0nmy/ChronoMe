@@ -9,6 +9,7 @@ import (
 
 // Entry は EndedAt がゼロの間は実行中になり得る時間ブロックを表す。
 type Entry struct {
+	Version     int64      `gorm:"not null;default:1" json:"version"`
 	ID          uuid.UUID  `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID      uuid.UUID  `gorm:"type:uuid;index;not null" json:"user_id"`
 	ProjectID   *uuid.UUID `gorm:"type:uuid" json:"project_id,omitempty"`

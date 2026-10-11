@@ -55,16 +55,22 @@ func (u *TagUsecase) Update(ctx context.Context, userID uuid.UUID, id uuid.UUID,
 	if err != nil {
 		return nil, err
 	}
+	if input.Version != nil && *input.Version != tag.Version {
+		return nil, repository.ErrConflict
+	}
+	columns := []string{}
 	if updates.Name != nil {
+		columns = append(columns, "name")
 		tag.Name = *updates.Name
 	}
 	if updates.Color != nil {
+		columns = append(columns, "color")
 		tag.Color = *updates.Color
 	}
 	if err := tag.Validate(); err != nil {
 		return nil, err
 	}
-	if err := u.tags.Update(ctx, tag); err != nil {
+	if err := u.tags.Update(ctx, tag, columns); err != nil {
 		return nil, err
 	}
 	return tag, nil

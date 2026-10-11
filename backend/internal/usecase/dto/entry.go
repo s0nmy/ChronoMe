@@ -78,6 +78,7 @@ func (r EntryCreateRequest) Normalize() (EntryCreateData, error) {
 
 // EntryUpdateRequest は更新用のパッチペイロードを受け取る。
 type EntryUpdateRequest struct {
+	Version   *int64    `json:"version,omitempty"`
 	Title     *string   `json:"title"`
 	Notes     *string   `json:"notes"`
 	ProjectID *string   `json:"project_id"`
@@ -104,6 +105,9 @@ type EntryUpdateData struct {
 
 // Normalize はパッチデータを検証する。
 func (r EntryUpdateRequest) Normalize() (EntryUpdateData, error) {
+	if r.Version != nil && *r.Version < 1 {
+		return EntryUpdateData{}, ValidationError{Field: "version", Message: "must be positive"}
+	}
 	if r.Title != nil {
 		trimmed := strings.TrimSpace(*r.Title)
 		if trimmed == "" {

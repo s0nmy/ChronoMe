@@ -474,6 +474,11 @@ func buildEntryFilter(r *http.Request) (repository.EntryFilter, error) {
 }
 
 func respondUsecaseError(w http.ResponseWriter, err error) {
+	if errors.Is(err, repository.ErrConflict) {
+		respondError(w, http.StatusConflict, err.Error())
+		return
+	}
+
 	var valErr dto.ValidationError
 	switch {
 	case errors.As(err, &valErr):
