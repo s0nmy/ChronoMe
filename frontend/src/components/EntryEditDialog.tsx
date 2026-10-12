@@ -14,6 +14,7 @@ import { Textarea } from "./ui/textarea";
 import type { Entry, Project } from "../types";
 import { ProjectSelect } from "./ProjectSelect";
 import { formatTags, parseTagInput } from "../utils/tags";
+import { formatLocalDateInput } from "../utils/time";
 
 interface EntryEditDialogProps {
   open: boolean;
@@ -56,7 +57,7 @@ export function EntryEditDialog({
       const endedAt = entry.endedAt || entry.startedAt;
       setFormData({
         projectId: entry.projectId,
-        date: startedAt.toISOString().split("T")[0],
+        date: formatLocalDateInput(startedAt),
         startTime: startedAt.toTimeString().slice(0, 5),
         endTime: endedAt.toTimeString().slice(0, 5),
         notes: entry.notes || "",
