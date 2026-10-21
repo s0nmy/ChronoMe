@@ -72,5 +72,12 @@ func (r *TagRepository) Update(ctx context.Context, tag *entity.Tag, columns []s
 }
 
 func (r *TagRepository) Delete(ctx context.Context, userID uuid.UUID, id uuid.UUID) error {
-	return r.db.WithContext(ctx).Where("user_id = ? AND id = ?", userID, id).Delete(&entity.Tag{}).Error
+	result := r.db.WithContext(ctx).Where("user_id = ? AND id = ?", userID, id).Delete(&entity.Tag{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return repository.ErrNotFound
+	}
+	return nil
 }
