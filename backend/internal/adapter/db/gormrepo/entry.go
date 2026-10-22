@@ -112,7 +112,14 @@ func (r *EntryRepository) Update(ctx context.Context, entry *entity.Entry, colum
 }
 
 func (r *EntryRepository) Delete(ctx context.Context, userID uuid.UUID, id uuid.UUID) error {
-	return r.db.WithContext(ctx).Where("user_id = ? AND id = ?", userID, id).Delete(&entity.Entry{}).Error
+	result := r.db.WithContext(ctx).Where("user_id = ? AND id = ?", userID, id).Delete(&entity.Entry{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return repository.ErrNotFound
+	}
+	return nil
 }
 
 func (r *EntryRepository) ReplaceTags(ctx context.Context, entry *entity.Entry, tagIDs []uuid.UUID) error {

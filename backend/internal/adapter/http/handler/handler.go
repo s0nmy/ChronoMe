@@ -169,7 +169,7 @@ func (h *APIHandler) deleteProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.projects.Delete(r.Context(), userID, pid); err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
+		respondUsecaseError(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -293,7 +293,7 @@ func (h *APIHandler) deleteEntry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.entries.Delete(r.Context(), userID, eid); err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
+		respondUsecaseError(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -474,6 +474,11 @@ func buildEntryFilter(r *http.Request) (repository.EntryFilter, error) {
 }
 
 func respondUsecaseError(w http.ResponseWriter, err error) {
+	if errors.Is(err, repository.ErrNotFound) {
+		respondError(w, http.StatusNotFound, err.Error())
+		return
+	}
+
 	if errors.Is(err, repository.ErrConflict) {
 		respondError(w, http.StatusConflict, err.Error())
 		return

@@ -208,6 +208,7 @@ Authorization: Bearer <Supabase access token>
 - **概要**: プロジェクト削除
 - **制約**: 紐付エントリが存在する場合 `409`。アーカイブのみ行う場合は `PATCH` で `is_archived=true` を設定する。
 - **レスポンス**: `204 No Content`
+- **エラー**: 対象が存在しない、削除済み、または他ユーザーの対象の場合は `404 Not Found`。
 
 ---
 
@@ -243,6 +244,7 @@ Authorization: Bearer <Supabase access token>
 
 #### DELETE /api/tags/{tag_id}
 - **レスポンス `204 No Content`**
+- **エラー**: 対象が存在しない、削除済み、または他ユーザーの対象の場合は `404 Not Found`。
 - **備考**: 今後 `entry_tags` を cascade delete 予定
 
 ---
@@ -314,6 +316,7 @@ Authorization: Bearer <Supabase access token>
 #### DELETE /api/entries/{entry_id}
 - **概要**: エントリ削除
 - **レスポンス**: `204 No Content`
+- **エラー**: 対象が存在しない、削除済み、または他ユーザーの対象の場合は `404 Not Found`。
 - **備考**: レポート集計整合性のため論理削除に切替える方針も検討可能。
 
 #### POST /api/entries/start

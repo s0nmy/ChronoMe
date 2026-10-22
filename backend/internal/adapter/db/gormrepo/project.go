@@ -75,5 +75,12 @@ func (r *ProjectRepository) Update(ctx context.Context, project *entity.Project,
 }
 
 func (r *ProjectRepository) Delete(ctx context.Context, userID uuid.UUID, id uuid.UUID) error {
-	return r.db.WithContext(ctx).Where("user_id = ? AND id = ?", userID, id).Delete(&entity.Project{}).Error
+	result := r.db.WithContext(ctx).Where("user_id = ? AND id = ?", userID, id).Delete(&entity.Project{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return repository.ErrNotFound
+	}
+	return nil
 }
