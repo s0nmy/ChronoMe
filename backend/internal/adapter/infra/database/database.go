@@ -21,7 +21,11 @@ func Open(cfg config.Config) (*gorm.DB, error) {
 	gormConfig := &gorm.Config{Logger: logger.Default.LogMode(logger.Warn)}
 	switch cfg.DBDriver {
 	case "postgres":
-		db, err = gorm.Open(postgres.Open(cfg.DBDsn), gormConfig)
+		// Supabase の Transaction Pooler (PgBouncer) は接続をまたいだ prepared statement を扱えないため simple protocol を使う。
+		db, err = gorm.Open(postgres.New(postgres.Config{
+			DSN:                  cfg.DBDsn,
+			PreferSimpleProtocol: true,
+		}), gormConfig)
 	case "sqlite":
 		db, err = gorm.Open(sqlite.Open(cfg.DBDsn), gormConfig)
 	default:
